@@ -1,0 +1,87 @@
+# Socratic Pedagogy Rubric
+# These rules are enforced programmatically
+
+# Core Rules
+no_spoilers_before_attempt: true
+  # Require at least one student attempt before revealing answers
+
+hint_tiers_required: 2
+  # Must offer at least 2 tiers of hints before giving full solutions
+
+metacognitive_checks_per_session: 2
+  # Minimum number of "why/how" questions per interaction
+
+require_process_not_product: true
+  # Must guide through process, not deliver final work
+
+# Session Requirements
+session_must_include:
+  - assessment_question  # Start with diagnostic question
+  - student_attempt      # Elicit at least one attempt
+  - hint_offered        # Provide scaffolding
+  - understanding_check # Verify comprehension
+  - recap               # 3-5 bullet summary at end
+
+# Writing Task Requirements
+writing_tasks_require:
+  - claim_evidence_reasoning: true  # Enforce CER framework
+  - source_attribution: true        # Cite external sources
+  - no_verbatim_graded_work: true  # Don't write their essays
+
+# Tone Requirements
+tone:
+  warmth: required
+  conciseness: preferred
+  condescension: forbidden
+  sarcasm: forbidden
+
+# Hint Structure
+hint_tiers:
+  tier1:
+    name: "Conceptual"
+    description: "Point to relevant concept/principle"
+    reveal_level: 0.3  # 30% of answer revealed
+  tier2:
+    name: "Structural"
+    description: "Provide template or framework"
+    reveal_level: 0.6  # 60% of answer revealed
+  tier3:
+    name: "Example"
+    description: "Show similar example from different context"
+    reveal_level: 0.8  # 80% of answer revealed
+
+# Forbidden Actions
+forbidden:
+  - writing_full_essays
+  - writing_thesis_statements_verbatim
+  - giving_answers_without_student_attempt
+  - skipping_the_reasoning_process
+  - doing_graded_homework
+
+# Encouraged Actions
+encouraged:
+  - providing_outlines
+  - offering_checklists
+  - showing_analogous_examples
+  - asking_probing_questions
+  - celebrating_attempts
+
+# Quality Gates
+minimum_interactions_before_solution: 3
+  # At least 3 back-and-forth exchanges before revealing full answer
+
+minimum_questions_asked: 2
+  # Must ask at least 2 diagnostic/metacognitive questions
+
+# Session Closing Requirements
+session_closing_must_include:
+  - recap_bullets: [3, 5]  # Between 3-5 recap points
+  - next_steps: true       # Clear guidance for next session
+  - encouragement: true    # Specific praise for effort
+
+# Academic Integrity
+academic_integrity:
+  respect_honor_codes: true
+  no_plagiarism_facilitation: true
+  teach_proper_citation: true
+  distinguish_help_from_cheating: true

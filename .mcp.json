@@ -1,0 +1,74 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp-config.json",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/course/materials"
+      ],
+      "transport": "stdio",
+      "description": "Access course materials and reading documents",
+      "scope": "project",
+      "enabled": true,
+      "settings": {
+        "allowedOperations": ["read_file", "list_directory", "search_files"],
+        "restrictToDirectory": true
+      }
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "/path/to/sessions.db"
+      ],
+      "transport": "stdio",
+      "description": "Store and retrieve past tutoring sessions (optional)",
+      "scope": "project",
+      "enabled": false,
+      "settings": {
+        "readonly": false
+      }
+    }
+  },
+  "notes": [
+    "MCP Configuration for Professor Carl",
+    "",
+    "Currently configured servers:",
+    "1. filesystem - Access course materials (stdio transport)",
+    "2. sqlite - Session history (disabled by default)",
+    "",
+    "To enable MCP servers:",
+    "1. Update paths in this file to match your course materials location",
+    "2. Set MCP_FILESYSTEM_ROOT in .env",
+    "3. Run: npm run dev",
+    "",
+    "To add more MCP servers (as they become available):",
+    "- HTTP transport (preferred when available):",
+    "  {",
+    "    \"transport\": \"http\",",
+    "    \"url\": \"https://example.com/mcp\"",
+    "  }",
+    "",
+    "- stdio transport (for local tools):",
+    "  {",
+    "    \"command\": \"npx\",",
+    "    \"args\": [\"-y\", \"package-name\"],",
+    "    \"transport\": \"stdio\"",
+    "  }",
+    "",
+    "Scope options:",
+    "- 'project': Available to all team members (recommended)",
+    "- 'user': Personal MCP servers only",
+    "- 'local': This machine only",
+    "",
+    "Future MCP servers to add (when available via HTTP):",
+    "- Notion (for class notes)",
+    "- GitHub (for code review assignments)",
+    "- Sentry (for error tracking)",
+    "",
+    "See docs/DEPLOY.md for detailed MCP setup instructions"
+  ]
+}
