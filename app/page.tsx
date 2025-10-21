@@ -218,7 +218,7 @@ export default function Home() {
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-3">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-            Professor Carl uses the Socratic method - I'll guide you with
+            Professor Carl uses the Socratic method - I&apos;ll guide you with
             questions, not give you answers. All conversations support academic
             integrity.
           </p>

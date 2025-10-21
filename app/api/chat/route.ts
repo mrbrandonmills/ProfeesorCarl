@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
       system: systemPrompt,
-      messages: messages.map((msg: any) => ({
+      messages: messages.map((msg: { role: string; content: string }) => ({
         role: msg.role,
         content: msg.content,
       })),
@@ -75,10 +75,10 @@ export async function POST(req: NextRequest) {
       warnings: validation.warnings,
       sessionState: socraticMiddleware.getSessionSummary(currentSessionId),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
