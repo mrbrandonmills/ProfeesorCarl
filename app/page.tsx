@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import HintStepper from './components/HintStepper';
+import YouTubeEmbed from './components/YouTubeEmbed';
 import { parseHints } from './utils/hintParser';
+import { parseVideos, isYouTubeEnabled } from './utils/youtubeParser';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -137,6 +139,18 @@ export default function Home() {
               const parsedMessage =
                 message.role === 'assistant' ? parseHints(message.content) : null;
 
+              // Parse videos from Carl's messages (safely - won't break if it fails)
+              let parsedVideos = null;
+              try {
+                parsedVideos =
+                  message.role === 'assistant' && isYouTubeEnabled()
+                    ? parseVideos(message.content)
+                    : null;
+              } catch (error) {
+                console.warn('Failed to parse videos:', error);
+                // Continue without videos if parsing fails
+              }
+
               return (
                 <div
                   key={index}
@@ -177,6 +191,20 @@ export default function Home() {
                         {/* Hint Stepper (if hints detected) */}
                         {parsedMessage && parsedMessage.hasHints && (
                           <HintStepper hints={parsedMessage.hints} />
+                        )}
+
+                        {/* YouTube Videos (if detected) */}
+                        {parsedVideos && parsedVideos.hasVideos && (
+                          <div className="mt-3">
+                            {parsedVideos.videos.map((video, videoIndex) => (
+                              <YouTubeEmbed
+                                key={videoIndex}
+                                videoId={video.videoId}
+                                title={video.title}
+                                description={video.description}
+                              />
+                            ))}
+                          </div>
                         )}
 
                         {/* Fallback if no hints detected */}
