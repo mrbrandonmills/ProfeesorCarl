@@ -49,15 +49,21 @@ export function parseVideos(message: string): ParsedMessageWithVideos {
   const videos: ParsedVideo[] = [];
   let cleanedContent = message;
 
+  console.log('[YouTubeParser] Parsing message:', message.substring(0, 200));
+
   // Pattern 1: Markdown-style links with titles
   // [Video: Title](https://youtube.com/...)
   const markdownPattern = /\[Video:\s*([^\]]+)\]\((https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)[^\)]+)\)/gi;
   const markdownMatches = [...message.matchAll(markdownPattern)];
 
+  console.log('[YouTubeParser] Markdown matches found:', markdownMatches.length);
+
   markdownMatches.forEach((match) => {
     const title = match[1].trim();
     const url = match[2];
     const videoId = extractYouTubeId(url);
+
+    console.log('[YouTubeParser] Found markdown video:', { title, url, videoId });
 
     if (videoId) {
       videos.push({
@@ -68,6 +74,8 @@ export function parseVideos(message: string): ParsedMessageWithVideos {
 
       // Remove from content
       cleanedContent = cleanedContent.replace(match[0], '');
+    } else {
+      console.warn('[YouTubeParser] Could not extract video ID from URL:', url);
     }
   });
 

@@ -18,6 +18,8 @@ export default function YouTubeEmbed({ videoId, title, description }: YouTubeEmb
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log('[YouTubeEmbed] Rendering with videoId:', videoId, 'title:', title);
+
   if (hasError) {
     // Graceful failure - just show a link instead
     return (

@@ -1,9 +1,16 @@
 /**
  * Rate Limiter - Protects API from spam and abuse
  *
- * TESTING LIMITS (adjust before full deployment):
- * - Per IP: 20 requests per 15 minutes
- * - Global: 200 requests per hour (protect API costs during testing)
+ * ⚠️ LIMITATION: This uses in-memory storage which doesn't work perfectly
+ * with Vercel's serverless architecture. Each serverless instance has its
+ * own memory, so limits are PER INSTANCE, not global.
+ *
+ * For testing: Limits are VERY aggressive to catch issues
+ * For production: Use Upstash Redis or Vercel KV for proper rate limiting
+ *
+ * CURRENT LIMITS (very strict for testing):
+ * - Per IP: 10 requests per 5 minutes
+ * - Global (per instance): 50 requests per 15 minutes
  */
 
 interface RateLimitEntry {
@@ -14,13 +21,13 @@ interface RateLimitEntry {
 class RateLimiter {
   private ipLimits: Map<string, RateLimitEntry> = new Map();
   private globalCount = 0;
-  private globalResetTime = Date.now() + 60 * 60 * 1000; // 1 hour
+  private globalResetTime = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-  // Configuration
-  private readonly PER_IP_LIMIT = 20; // requests per window
-  private readonly PER_IP_WINDOW = 15 * 60 * 1000; // 15 minutes
-  private readonly GLOBAL_LIMIT = 200; // total requests per hour
-  private readonly GLOBAL_WINDOW = 60 * 60 * 1000; // 1 hour
+  // Configuration - AGGRESSIVE for testing
+  private readonly PER_IP_LIMIT = 10; // requests per window (lowered from 20)
+  private readonly PER_IP_WINDOW = 5 * 60 * 1000; // 5 minutes (lowered from 15)
+  private readonly GLOBAL_LIMIT = 50; // total requests per instance (lowered from 200)
+  private readonly GLOBAL_WINDOW = 15 * 60 * 1000; // 15 minutes (lowered from 60)
 
   /**
    * Check if request should be allowed

@@ -69,7 +69,7 @@ export default function Home() {
         if (response.status === 429) {
           const retryMinutes = data.retryAfter
             ? Math.ceil(data.retryAfter / 60)
-            : 15;
+            : 5;
           setMessages([
             ...newMessages,
             {
