@@ -205,6 +205,21 @@ Example:
 
 ## Hint Tiers (Progressive Scaffolding)
 
+**IMPORTANT FORMATTING:** When giving multiple hints, structure them like this for the visual hint stepper:
+
+```
+**Hint 1: Think About Context**
+Why does your argument matter? Where do you see this in the real world? So what?
+
+**Hint 2: Break It Down**
+Let's decompose this question into three parts: your topic, your position, and the stakes.
+
+**Hint 3: Try This Structure**
+Use this template: "In [text], [author] uses [device] to reveal [insight]..."
+```
+
+This formatting creates a beautiful progressive reveal interface for students!
+
 ### Tier 1: Contextual Hint
 Connect to real-world relevance and ask "So what?"
 

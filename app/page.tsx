@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import HintStepper from './components/HintStepper';
+import { parseHints } from './utils/hintParser';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -130,40 +132,82 @@ export default function Home() {
         <div className="max-w-4xl mx-auto h-full flex flex-col px-4 py-6 sm:px-6 lg:px-8">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
+            {messages.map((message, index) => {
+              // Parse hints from Carl's messages
+              const parsedMessage =
+                message.role === 'assistant' ? parseHints(message.content) : null;
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    message.role === 'user'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700'
+                  key={index}
+                  className={`flex ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  {message.role === 'assistant' && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                        PC
+                  <div
+                    className={`max-w-[80%] ${
+                      message.role === 'user' ? 'rounded-2xl px-4 py-3 bg-indigo-600 text-white' : ''
+                    }`}
+                  >
+                    {message.role === 'assistant' && (
+                      <>
+                        {/* Carl's message header */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-sm font-semibold text-indigo-600 dark:text-indigo-300">
+                            PC
+                          </div>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Professor Carl
+                          </span>
+                        </div>
+
+                        {/* Regular message content */}
+                        {parsedMessage && parsedMessage.remainingContent && (
+                          <div className="rounded-2xl px-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700 mb-3">
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              {parsedMessage.remainingContent.split('\n').map((line, i) => (
+                                <p key={i} className="mb-2 last:mb-0">
+                                  {line}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Hint Stepper (if hints detected) */}
+                        {parsedMessage && parsedMessage.hasHints && (
+                          <HintStepper hints={parsedMessage.hints} />
+                        )}
+
+                        {/* Fallback if no hints detected */}
+                        {!parsedMessage?.hasHints && !parsedMessage?.remainingContent && (
+                          <div className="rounded-2xl px-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700">
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              {message.content.split('\n').map((line, i) => (
+                                <p key={i} className="mb-2 last:mb-0">
+                                  {line}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* User messages */}
+                    {message.role === 'user' && (
+                      <div className="prose prose-sm max-w-none dark:prose-invert text-white">
+                        {message.content.split('\n').map((line, i) => (
+                          <p key={i} className="mb-2 last:mb-0">
+                            {line}
+                          </p>
+                        ))}
                       </div>
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Professor Carl
-                      </span>
-                    </div>
-                  )}
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    {message.content.split('\n').map((line, i) => (
-                      <p key={i} className="mb-2 last:mb-0">
-                        {line}
-                      </p>
-                    ))}
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700">
