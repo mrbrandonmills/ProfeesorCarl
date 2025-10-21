@@ -7,6 +7,11 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages, sessionId } = await req.json();
@@ -38,7 +43,7 @@ export async function POST(req: NextRequest) {
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
       system: systemPrompt,
-      messages: messages.map((msg: { role: string; content: string }) => ({
+      messages: (messages as Message[]).map((msg) => ({
         role: msg.role,
         content: msg.content,
       })),
