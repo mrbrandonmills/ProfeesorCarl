@@ -14,6 +14,7 @@ Professor Carl is an AI teaching assistant designed for classroom office hours. 
 - ✅ **Clean Chat Interface** - Simple, student-friendly UI
 - ✅ **MCP Integration** - Ready for course materials access
 - ✅ **Academic Integrity** - Built-in protections against misuse
+- ✅ **Rate Limiting** - Protection against spam and API cost overruns
 - ✅ **Test Suite** - 22 passing tests validating pedagogy
 
 **Phase 2 (Planned):**
@@ -101,6 +102,16 @@ These aren't just guidelines - they're **validated in code** and **tested automa
 - Using Carl to avoid learning
 
 **Remember**: Carl is a tutor, not a ghostwriter. The work you submit must be your own.
+
+### Rate Limits ⏱️
+
+During testing, Professor Carl has limits to protect against unexpected costs:
+- **20 messages per 15 minutes** (per student)
+- **200 messages per hour** (everyone combined)
+
+If you hit the limit, Carl will tell you exactly how long to wait before the limit resets. The app isn't broken - it's just protecting the system while we're testing!
+
+See [docs/RATE_LIMITS.md](./docs/RATE_LIMITS.md) for details.
 
 ---
 

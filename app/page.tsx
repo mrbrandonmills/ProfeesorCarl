@@ -65,6 +65,21 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle rate limiting (429)
+        if (response.status === 429) {
+          const retryMinutes = data.retryAfter
+            ? Math.ceil(data.retryAfter / 60)
+            : 15;
+          setMessages([
+            ...newMessages,
+            {
+              role: 'assistant',
+              content: `Hey there! I need to slow down for a moment. ${data.message || 'Too many requests.'}\n\nPlease wait about ${retryMinutes} minute${retryMinutes !== 1 ? 's' : ''} before sending more messages. This helps keep the service running smoothly for everyone during testing.\n\nIn the meantime, try reviewing your notes or thinking through your question!`,
+            },
+          ]);
+          return; // Don't throw error, just show the message
+        }
+
         // Handle blocked responses with fallback
         if (data.fallback) {
           setMessages([
