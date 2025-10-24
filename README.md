@@ -261,3 +261,4 @@ See [docs/DEPLOY.md](./docs/DEPLOY.md) for detailed MCP setup.
 Professor Carl believes that the best learning happens when students discover answers themselves, guided by thoughtful questions. This tool embodies that philosophy in every interaction.
 
 **Built with ❤️ for educators who believe in teaching students how to think, not what to think.**
+# Force fresh deploy
