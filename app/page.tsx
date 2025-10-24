@@ -34,6 +34,47 @@ export default function Home() {
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load chat from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedMessages = localStorage.getItem('carl_chat_messages');
+      const savedSessionId = localStorage.getItem('carl_session_id');
+
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+
+      if (savedSessionId) {
+        setSessionId(savedSessionId);
+      }
+    } catch (error) {
+      console.error('Failed to load chat from localStorage:', error);
+    }
+  }, []);
+
+  // Save chat to localStorage whenever messages change
+  useEffect(() => {
+    try {
+      localStorage.setItem('carl_chat_messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Failed to save chat to localStorage:', error);
+    }
+  }, [messages]);
+
+  // Save sessionId to localStorage whenever it changes
+  useEffect(() => {
+    if (sessionId) {
+      try {
+        localStorage.setItem('carl_session_id', sessionId);
+      } catch (error) {
+        console.error('Failed to save sessionId to localStorage:', error);
+      }
+    }
+  }, [sessionId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -41,6 +82,22 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const clearChat = () => {
+    if (confirm('Are you sure you want to start a new conversation? This will clear all messages.')) {
+      setMessages([
+        {
+          role: 'assistant',
+          content:
+            "Hi! I'm Professor Carl, your English tutor. I'm here for office hours to help you develop your critical thinking and writing skills. What are you working on today?",
+        },
+      ]);
+      setSessionId('');
+      setSessionState(null);
+      localStorage.removeItem('carl_chat_messages');
+      localStorage.removeItem('carl_session_id');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,15 +195,24 @@ export default function Home() {
                 Socratic English Tutor • Office Hours
               </p>
             </div>
-            {sessionState && (
-              <div className="hidden sm:flex flex-col items-end text-xs text-gray-500 dark:text-gray-400">
-                <span>Session: {sessionState.interactions} interactions</span>
-                <span>
-                  Progress: {sessionState.studentAttempts} attempts,{' '}
-                  {sessionState.hintsOffered} hints
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {sessionState && (
+                <div className="hidden sm:flex flex-col items-end text-xs text-gray-500 dark:text-gray-400">
+                  <span>Session: {sessionState.interactions} interactions</span>
+                  <span>
+                    Progress: {sessionState.studentAttempts} attempts,{' '}
+                    {sessionState.hintsOffered} hints
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={clearChat}
+                className="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
+                title="Start a new conversation"
+              >
+                New Chat
+              </button>
+            </div>
           </div>
         </div>
       </header>

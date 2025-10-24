@@ -21,20 +21,36 @@ export default function YouTubeEmbed({ videoId, title, description }: YouTubeEmb
   console.log('[YouTubeEmbed] Rendering with videoId:', videoId, 'title:', title);
 
   if (hasError) {
-    // Graceful failure - just show a link instead
+    // Graceful failure - show helpful search suggestion
+    const searchQuery = title ? title.replace('Video: ', '') : 'educational video';
+    const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+
     return (
-      <div className="my-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          📺 Video: {title || 'Educational Resource'}
-        </p>
-        <a
-          href={`https://www.youtube.com/watch?v=${videoId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 text-sm underline"
-        >
-          Watch on YouTube →
-        </a>
+      <div className="my-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">📺</div>
+          <div className="flex-1">
+            <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+              Video Suggestion: {title || 'Educational Resource'}
+            </h4>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              This video couldn&apos;t be embedded, but you can find helpful videos on this topic:
+            </p>
+            <div className="flex flex-col gap-2">
+              <a
+                href={youtubeSearchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline"
+              >
+                🔍 Search YouTube for &quot;{searchQuery}&quot; →
+              </a>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                💡 <strong>Tip:</strong> After watching, come back here and let&apos;s discuss what you learned!
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
