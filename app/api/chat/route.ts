@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     // Call Anthropic API
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-sonnet-20250620',
       max_tokens: 1024,
       system: systemPrompt,
       messages: (messages as Message[]).map((msg) => ({
