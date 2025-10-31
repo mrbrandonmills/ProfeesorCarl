@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { isSpeaking, stop, setGlobalSpeechRate, setPreferredVoice, getAvailableVoices } from '../utils/textToSpeech';
+import {
+  isSpeaking,
+  stop,
+  setGlobalSpeechRate,
+  getOpenAIVoices,
+  setOpenAIVoice,
+  getOpenAIVoice
+} from '../utils/textToSpeech';
 
 interface VoiceSettingsProps {
   voiceEnabled: boolean;
@@ -19,30 +26,13 @@ export default function VoiceSettings({
   const [currentlySpeaking, setCurrentlySpeaking] = useState(false);
   const [showSpeedControl, setShowSpeedControl] = useState(false);
   const [showVoiceSelector, setShowVoiceSelector] = useState(false);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string>('');
+  const [selectedVoice, setSelectedVoice] = useState<string>('alloy');
 
   useEffect(() => {
-    // Load available voices
-    const loadVoices = () => {
-      const voices = getAvailableVoices();
-      setAvailableVoices(voices);
-
-      // Set default to first British/English voice if not already set
-      if (!selectedVoice && voices.length > 0) {
-        const defaultVoice = voices.find(v => v.lang.startsWith('en-GB')) || voices[0];
-        setSelectedVoice(defaultVoice.name);
-      }
-    };
-
-    loadVoices();
-
-    // Voices might load asynchronously
-    if (typeof window !== 'undefined') {
-      window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-      return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-    }
-  }, [selectedVoice]);
+    // Load current OpenAI voice on mount
+    const currentVoice = getOpenAIVoice();
+    setSelectedVoice(currentVoice);
+  }, []);
 
   useEffect(() => {
     // Check speaking status periodically
@@ -81,9 +71,9 @@ export default function VoiceSettings({
     setGlobalSpeechRate(newRate);
   };
 
-  const handleVoiceChange = (voiceName: string) => {
-    setSelectedVoice(voiceName);
-    setPreferredVoice(voiceName);
+  const handleVoiceChange = (voiceId: string) => {
+    setSelectedVoice(voiceId);
+    setOpenAIVoice(voiceId as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer');
     setShowVoiceSelector(false);
   };
 
@@ -121,25 +111,30 @@ export default function VoiceSettings({
           {showVoiceSelector && (
             <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[280px] max-h-[300px] overflow-y-auto z-50">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Voice
+                Select Voice (OpenAI Premium)
               </label>
               <div className="space-y-1">
-                {availableVoices.map((voice) => (
+                {getOpenAIVoices().map((voice) => (
                   <button
-                    key={voice.name}
-                    onClick={() => handleVoiceChange(voice.name)}
+                    key={voice.id}
+                    onClick={() => handleVoiceChange(voice.id)}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      selectedVoice === voice.name
+                      selectedVoice === voice.id
                         ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                         : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     <div className="font-medium">{voice.name}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {voice.lang} {voice.localService ? '(Local)' : '(Online)'}
+                      {voice.description}
                     </div>
                   </button>
                 ))}
+              </div>
+              <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ✨ High-quality AI voices (same as ChatGPT)
+                </p>
               </div>
             </div>
           )}

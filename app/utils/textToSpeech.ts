@@ -1,17 +1,23 @@
 /**
  * Text-to-Speech Utility for Professor Carl
- * Uses Web Speech API with British English voice
+ * Uses OpenAI TTS API (premium quality) with browser TTS fallback
  */
 
-// Track current utterance for cleanup and state management
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// Track current audio for cleanup and state management
+let currentAudio: HTMLAudioElement | null = null;
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 // Global speech rate (adjustable by user, default 0.95x)
 let globalSpeechRate = 0.95;
 
-// Preferred voice name (user-selected)
+// Preferred voice name (for browser TTS fallback)
 let preferredVoiceName: string | null = null;
+
+// Use OpenAI TTS (true) or browser TTS (false)
+let useOpenAITTS = true;
+
+// OpenAI voice selection (alloy, echo, fable, onyx, nova, shimmer)
+let openAIVoice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' = 'alloy';
 
 /**
  * Get all available voices
@@ -73,32 +79,105 @@ function getVoiceToUse(): SpeechSynthesisVoice | null {
 }
 
 /**
- * Speak text using selected or British English voice
+ * Speak text using OpenAI TTS (with browser TTS fallback)
  */
-export function speak(
+export async function speak(
   text: string,
   onEnd?: () => void,
   onStart?: () => void
-): void {
+): Promise<void> {
   if (typeof window === 'undefined') return;
 
   // Stop any current speech
   stop();
 
+  // Try OpenAI TTS first
+  if (useOpenAITTS) {
+    try {
+      await speakWithOpenAI(text, onEnd, onStart);
+      return;
+    } catch (error) {
+      console.warn('OpenAI TTS failed, falling back to browser TTS:', error);
+      // Fall through to browser TTS
+    }
+  }
+
+  // Fallback to browser TTS
+  speakWithBrowser(text, onEnd, onStart);
+}
+
+/**
+ * Speak using OpenAI TTS API
+ */
+async function speakWithOpenAI(
+  text: string,
+  onEnd?: () => void,
+  onStart?: () => void
+): Promise<void> {
+  // Call our API endpoint to generate speech
+  const response = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voice: openAIVoice }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`TTS API failed: ${response.status}`);
+  }
+
+  // Get audio blob
+  const audioBlob = await response.blob();
+  const audioUrl = URL.createObjectURL(audioBlob);
+
+  // Create audio element
+  const audio = new Audio(audioUrl);
+  audio.playbackRate = globalSpeechRate; // Apply user's speed setting
+
+  // Set up event listeners
+  audio.onloadeddata = () => {
+    if (onStart) onStart();
+  };
+
+  audio.onended = () => {
+    URL.revokeObjectURL(audioUrl); // Clean up
+    currentAudio = null;
+    if (onEnd) onEnd();
+  };
+
+  audio.onerror = (error) => {
+    console.error('Audio playback error:', error);
+    URL.revokeObjectURL(audioUrl);
+    currentAudio = null;
+    if (onEnd) onEnd();
+  };
+
+  // Play audio
+  currentAudio = audio;
+  await audio.play();
+}
+
+/**
+ * Speak using browser TTS (fallback)
+ */
+function speakWithBrowser(
+  text: string,
+  onEnd?: () => void,
+  onStart?: () => void
+): void {
   const utterance = new SpeechSynthesisUtterance(text);
 
   // Get preferred or default voice
   const voice = getVoiceToUse();
   if (voice) {
     utterance.voice = voice;
-    utterance.lang = voice.lang; // Use the voice's language
+    utterance.lang = voice.lang;
   } else {
-    utterance.lang = 'en-GB'; // Fallback to British English
+    utterance.lang = 'en-GB';
   }
 
-  // Configure speech parameters for natural Professor Carl voice
-  utterance.rate = globalSpeechRate; // User-adjustable speech rate
-  utterance.pitch = 1.0; // Natural pitch
+  // Configure speech parameters
+  utterance.rate = globalSpeechRate;
+  utterance.pitch = 1.0;
   utterance.volume = 1.0;
 
   utterance.onstart = () => {
@@ -121,20 +200,35 @@ export function speak(
 }
 
 /**
- * Stop current speech
+ * Stop current speech (both OpenAI and browser TTS)
  */
 export function stop(): void {
   if (typeof window === 'undefined') return;
 
+  // Stop OpenAI audio if playing
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+
+  // Stop browser TTS if playing
   window.speechSynthesis.cancel();
   currentUtterance = null;
 }
 
 /**
- * Check if currently speaking
+ * Check if currently speaking (both OpenAI and browser TTS)
  */
 export function isSpeaking(): boolean {
   if (typeof window === 'undefined') return false;
+
+  // Check OpenAI audio
+  if (currentAudio && !currentAudio.paused) {
+    return true;
+  }
+
+  // Check browser TTS
   return window.speechSynthesis.speaking;
 }
 
@@ -170,6 +264,11 @@ export function getCurrentVoiceInfo(): string {
  */
 export function setGlobalSpeechRate(rate: number): void {
   globalSpeechRate = Math.max(0.5, Math.min(2.0, rate)); // Clamp between 0.5 and 2.0
+
+  // Also update currently playing audio if any
+  if (currentAudio) {
+    currentAudio.playbackRate = globalSpeechRate;
+  }
 }
 
 /**
@@ -177,4 +276,52 @@ export function setGlobalSpeechRate(rate: number): void {
  */
 export function getGlobalSpeechRate(): number {
   return globalSpeechRate;
+}
+
+/**
+ * Set OpenAI voice (alloy, echo, fable, onyx, nova, shimmer)
+ */
+export function setOpenAIVoice(
+  voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'
+): void {
+  openAIVoice = voice;
+}
+
+/**
+ * Get current OpenAI voice
+ */
+export function getOpenAIVoice(): string {
+  return openAIVoice;
+}
+
+/**
+ * Toggle between OpenAI TTS and browser TTS
+ */
+export function setUseOpenAITTS(use: boolean): void {
+  useOpenAITTS = use;
+}
+
+/**
+ * Check if using OpenAI TTS
+ */
+export function isUsingOpenAITTS(): boolean {
+  return useOpenAITTS;
+}
+
+/**
+ * Get available OpenAI voices
+ */
+export function getOpenAIVoices(): Array<{
+  id: string;
+  name: string;
+  description: string;
+}> {
+  return [
+    { id: 'alloy', name: 'Alloy', description: 'Neutral, clear voice' },
+    { id: 'echo', name: 'Echo', description: 'Male, professional' },
+    { id: 'fable', name: 'Fable', description: 'British accent, expressive' },
+    { id: 'onyx', name: 'Onyx', description: 'Deep, authoritative' },
+    { id: 'nova', name: 'Nova', description: 'Warm, engaging' },
+    { id: 'shimmer', name: 'Shimmer', description: 'Friendly, conversational' },
+  ];
 }
