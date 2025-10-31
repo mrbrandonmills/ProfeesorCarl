@@ -1,27 +1,40 @@
 # Professor Carl 🎓
 
-**A Socratic English tutor powered by Claude and Model Context Protocol (MCP)**
+**A Socratic English tutor powered by Claude with ChatGPT-Quality Voice**
 
 Professor Carl is an AI teaching assistant designed for classroom office hours. Unlike traditional AI that gives direct answers, Carl uses the **Socratic method** to guide students toward understanding through thoughtful questions and tiered hints.
+
+✨ **NEW: Premium AI Voice Mode** - Same voice quality as ChatGPT!
 
 ---
 
 ## ✨ Features
 
 **Phase 1 (Current) - Working MVP:**
+- ✅ **Premium Voice Mode (NEW!)** - OpenAI TTS with 6 AI voices
 - ✅ **Socratic Pedagogy** - Enforces "guide, don't give" teaching
 - ✅ **Programmatic Guardrails** - No spoilers before student attempts
 - ✅ **Clean Chat Interface** - Simple, student-friendly UI
-- ✅ **MCP Integration** - Ready for course materials access
+- ✅ **YouTube Integration** - Contextual educational videos
+- ✅ **Hint Stepper UI** - Progressive reveal of guidance
 - ✅ **Academic Integrity** - Built-in protections against misuse
 - ✅ **Rate Limiting** - Protection against spam and API cost overruns
+- ✅ **Chat Persistence** - Conversations saved locally
 - ✅ **Test Suite** - 22 passing tests validating pedagogy
 
-**Phase 2 (Planned):**
-- 🚧 Hint stepper UI with tiered reveals
-- 🚧 Sub-agents for specific tasks (/thesis, /outline, /cite, /revise)
-- 🚧 Tools sidebar showing MCP resources
-- 🚧 Additional MCP servers (SQLite, custom)
+**Voice Features:**
+- 🎙️ OpenAI TTS Integration (ChatGPT-quality)
+- 🗣️ 6 Premium AI Voices (Alloy, Echo, Fable, Onyx, Nova, Shimmer)
+- 🇬🇧 British Accent Options
+- ⚡ Adjustable Speed (0.5x - 2.0x)
+- 🎤 Speech-to-Text Input (Web Speech API)
+- 🛡️ Smart Fallback to Browser TTS
+
+**Phase 2 (In Progress):**
+- 🚧 Teacher Dashboard with Analytics
+- 🚧 Student Session Tracking
+- 🚧 Lesson Plan Integration
+- 🚧 Academic Integrity Monitoring
 
 **Phase 3 (Future):**
 - 📋 Student session management
