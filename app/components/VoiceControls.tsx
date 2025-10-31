@@ -47,6 +47,7 @@ export default function VoiceControls({
 }: VoiceControlsProps) {
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleTranscript = useCallback((text: string) => {
     onTranscript(text);
@@ -81,6 +82,16 @@ export default function VoiceControls({
 
           if (finalTranscript) {
             handleTranscript(finalTranscript.trim());
+
+            // Clear previous silence timer
+            if (silenceTimerRef.current) {
+              clearTimeout(silenceTimerRef.current);
+            }
+
+            // Start new silence timer - auto-stop after 2 seconds of no speech
+            silenceTimerRef.current = setTimeout(() => {
+              handleListeningChange(false);
+            }, 2000);
           }
         };
 
@@ -109,6 +120,9 @@ export default function VoiceControls({
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+      }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
       }
     };
   }, [isListening, handleTranscript, handleListeningChange]);

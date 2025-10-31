@@ -26,14 +26,13 @@ const HINT_ICONS: Record<number, string> = {
 };
 
 const HINT_PATTERNS = [
-  // Pattern 1: "Hint 1:" or "Tier 1:"
+  // Pattern 1: "Hint 1:" or "Tier 1:" - EXPLICIT hints only
   /(?:Hint|Tier)\s*(\d+):\s*([^\n]+)\n([\s\S]+?)(?=(?:Hint|Tier)\s*\d+:|$)/gi,
 
-  // Pattern 2: "**Hint 1:**" (markdown bold)
+  // Pattern 2: "**Hint 1:**" (markdown bold) - EXPLICIT hints only
   /\*\*(?:Hint|Tier)\s*(\d+):\*\*\s*([^\n]+)\n([\s\S]+?)(?=\*\*(?:Hint|Tier)\s*\d+:|$)/gi,
 
-  // Pattern 3: Numbered list with hint context
-  /(\d+)\.\s+\*\*([^*]+)\*\*[:\s]+([\s\S]+?)(?=\d+\.\s+\*\*|$)/gi,
+  // Pattern 3: REMOVED - was too aggressive, caught normal numbered lists
 ];
 
 /**
@@ -68,15 +67,9 @@ export function parseHints(message: string): ParsedMessage {
     }
   }
 
-  // If no structured hints found but message contains hint-like content
-  // Check for informal hints
-  if (hints.length === 0) {
-    const informalHints = detectInformalHints(message);
-    if (informalHints.length > 0) {
-      hints = informalHints;
-      remainingContent = extractNonHintContent(message, hints);
-    }
-  }
+  // DISABLED: Informal hint detection was too aggressive
+  // Only show hints when Carl explicitly uses "Hint 1:", "Hint 2:" format
+  // This prevents false positives on normal questions and conversation
 
   return {
     hasHints: hints.length > 0,

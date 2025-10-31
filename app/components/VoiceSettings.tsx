@@ -53,6 +53,24 @@ export default function VoiceSettings({
     return () => clearInterval(interval);
   }, []);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Close dropdowns if clicking outside
+      if (!target.closest('.voice-dropdown')) {
+        setShowSpeedControl(false);
+        setShowVoiceSelector(false);
+      }
+    };
+
+    if (showSpeedControl || showVoiceSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showSpeedControl, showVoiceSelector]);
+
   const handleStopSpeaking = () => {
     stop();
     setCurrentlySpeaking(false);
@@ -88,7 +106,7 @@ export default function VoiceSettings({
 
       {/* Voice Selector Button */}
       {voiceEnabled && (
-        <div className="relative">
+        <div className="relative voice-dropdown">
           <button
             onClick={() => setShowVoiceSelector(!showVoiceSelector)}
             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -101,7 +119,7 @@ export default function VoiceSettings({
 
           {/* Voice Selector Dropdown */}
           {showVoiceSelector && (
-            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[280px] max-h-[300px] overflow-y-auto">
+            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[280px] max-h-[300px] overflow-y-auto z-50">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Select Voice
               </label>
@@ -130,7 +148,7 @@ export default function VoiceSettings({
 
       {/* Speed Control Button */}
       {voiceEnabled && (
-        <div className="relative">
+        <div className="relative voice-dropdown">
           <button
             onClick={() => setShowSpeedControl(!showSpeedControl)}
             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -141,7 +159,7 @@ export default function VoiceSettings({
 
           {/* Speed Slider Dropdown */}
           {showSpeedControl && (
-            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px]">
+            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[200px] z-50">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Speech Speed: {speechRate.toFixed(1)}x
               </label>
