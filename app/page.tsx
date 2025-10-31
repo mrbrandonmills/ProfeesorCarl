@@ -40,6 +40,7 @@ export default function Home() {
   // Voice state
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [speechRate, setSpeechRate] = useState(0.95); // Default speech rate
 
   // Load chat from localStorage on mount
   useEffect(() => {
@@ -230,10 +231,6 @@ export default function Home() {
                   </span>
                 </div>
               )}
-              <VoiceSettings
-                voiceEnabled={voiceEnabled}
-                onVoiceEnabledChange={setVoiceEnabled}
-              />
               <button
                 onClick={clearChat}
                 className="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
@@ -385,6 +382,12 @@ export default function Home() {
                 onTranscript={handleVoiceTranscript}
                 isListening={isListening}
                 onListeningChange={setIsListening}
+              />
+              <VoiceSettings
+                voiceEnabled={voiceEnabled}
+                onVoiceEnabledChange={setVoiceEnabled}
+                speechRate={speechRate}
+                onSpeechRateChange={setSpeechRate}
               />
               <button
                 type="submit"

@@ -7,6 +7,9 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 
+// Global speech rate (adjustable by user, default 0.95x)
+let globalSpeechRate = 0.95;
+
 /**
  * Get available British English voices
  */
@@ -56,7 +59,7 @@ export function speak(
   }
 
   // Configure speech parameters for natural Professor Carl voice
-  utterance.rate = 0.95; // Slightly slower for clarity
+  utterance.rate = globalSpeechRate; // User-adjustable speech rate
   utterance.pitch = 1.0; // Natural pitch
   utterance.volume = 1.0;
   utterance.lang = 'en-GB';
@@ -123,4 +126,18 @@ export function getCurrentVoiceInfo(): string {
 
   const voice = voices[0];
   return `${voice.name} (${voice.lang})`;
+}
+
+/**
+ * Set global speech rate (0.5 = slow, 1.0 = normal, 2.0 = fast)
+ */
+export function setGlobalSpeechRate(rate: number): void {
+  globalSpeechRate = Math.max(0.5, Math.min(2.0, rate)); // Clamp between 0.5 and 2.0
+}
+
+/**
+ * Get current global speech rate
+ */
+export function getGlobalSpeechRate(): number {
+  return globalSpeechRate;
 }
