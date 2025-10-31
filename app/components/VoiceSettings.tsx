@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCurrentVoiceInfo, isSpeaking, stop, setGlobalSpeechRate } from '../utils/textToSpeech';
+import { isSpeaking, stop, setGlobalSpeechRate, setPreferredVoice, getAvailableVoices } from '../utils/textToSpeech';
 
 interface VoiceSettingsProps {
   voiceEnabled: boolean;
@@ -18,6 +18,31 @@ export default function VoiceSettings({
 }: VoiceSettingsProps) {
   const [currentlySpeaking, setCurrentlySpeaking] = useState(false);
   const [showSpeedControl, setShowSpeedControl] = useState(false);
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<string>('');
+
+  useEffect(() => {
+    // Load available voices
+    const loadVoices = () => {
+      const voices = getAvailableVoices();
+      setAvailableVoices(voices);
+
+      // Set default to first British/English voice if not already set
+      if (!selectedVoice && voices.length > 0) {
+        const defaultVoice = voices.find(v => v.lang.startsWith('en-GB')) || voices[0];
+        setSelectedVoice(defaultVoice.name);
+      }
+    };
+
+    loadVoices();
+
+    // Voices might load asynchronously
+    if (typeof window !== 'undefined') {
+      window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+      return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    }
+  }, [selectedVoice]);
 
   useEffect(() => {
     // Check speaking status periodically
@@ -38,6 +63,12 @@ export default function VoiceSettings({
     setGlobalSpeechRate(newRate);
   };
 
+  const handleVoiceChange = (voiceName: string) => {
+    setSelectedVoice(voiceName);
+    setPreferredVoice(voiceName);
+    setShowVoiceSelector(false);
+  };
+
   return (
     <div className="flex items-center gap-2">
       {/* Voice On/Off Toggle */}
@@ -54,6 +85,48 @@ export default function VoiceSettings({
           <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
         </svg>
       </button>
+
+      {/* Voice Selector Button */}
+      {voiceEnabled && (
+        <div className="relative">
+          <button
+            onClick={() => setShowVoiceSelector(!showVoiceSelector)}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            title="Choose voice"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 8a3 3 0 11-6 0 3 3 0 016 0zm10 0a3 3 0 11-6 0 3 3 0 016 0zM7 16a3 3 0 11-6 0 3 3 0 016 0zm10 0a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+
+          {/* Voice Selector Dropdown */}
+          {showVoiceSelector && (
+            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 min-w-[280px] max-h-[300px] overflow-y-auto">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Voice
+              </label>
+              <div className="space-y-1">
+                {availableVoices.map((voice) => (
+                  <button
+                    key={voice.name}
+                    onClick={() => handleVoiceChange(voice.name)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedVoice === voice.name
+                        ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">{voice.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {voice.lang} {voice.localService ? '(Local)' : '(Online)'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Speed Control Button */}
       {voiceEnabled && (

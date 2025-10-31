@@ -87,28 +87,55 @@ export function parseHints(message: string): ParsedMessage {
 
 /**
  * Detect informal hints (when Carl doesn't use structured format)
+ * ONLY trigger this for actual scaffolding hints, NOT initial questions
  */
 function detectInformalHints(message: string): Hint[] {
+  // Don't treat simple questions or assessment as hints
+  // Only detect as hints if there are MULTIPLE progressive scaffolding phrases
+  // AND the message seems to be offering structured support (not just asking questions)
+
+  // Check for markers that this is ACTUAL hint scaffolding:
+  // - Multiple "hint-like" phrases (at least 2-3)
+  // - Presence of progressive scaffolding language
+  // - Not just initial assessment questions
+
+  const scaffoldingMarkers = [
+    /Let's think about/gi,
+    /Consider (?:this|that|these)/gi,
+    /Try (?:thinking|this)/gi,
+    /(?:Here's|Try) (?:a|this) (?:template|structure|framework)/gi,
+  ];
+
+  const markerCount = scaffoldingMarkers.filter(pattern => pattern.test(message)).length;
+
+  // Only treat as hints if we have multiple scaffolding markers (2+)
+  // This means it's genuine progressive hinting, not just questions
+  if (markerCount < 2) {
+    return [];
+  }
+
+  // Also check message length - hints are usually substantial (not just greetings/questions)
+  if (message.length < 200) {
+    return [];
+  }
+
+  // If we get here, it's likely real hints - extract them
   const hints: Hint[] = [];
 
-  // Look for "Let's think about", "Consider", "Try thinking about"
   const hintPhrases = [
     { pattern: /Let's think about ([^.!?]+)/gi, title: 'Think About Context' },
-    { pattern: /Consider ([^.!?]+)/gi, title: 'Consider This' },
-    { pattern: /Try thinking about ([^.!?]+)/gi, title: 'Try This Approach' },
-    { pattern: /(?:So what\?[^\n]*)/gi, title: 'Relevance Check' },
+    { pattern: /Consider (?:this|that|these):?\s*([^.!?]+)/gi, title: 'Consider This' },
+    { pattern: /Try (?:thinking about|this):?\s*([^.!?]+)/gi, title: 'Try This Approach' },
   ];
 
   hintPhrases.forEach((phrase) => {
     const matches = [...message.matchAll(phrase.pattern)];
-    if (matches.length > 0) {
-      matches.forEach((match) => {
-        hints.push({
-          tier: hints.length + 1,
-          title: phrase.title,
-          content: match[0],
-          icon: HINT_ICONS[hints.length + 1] || '💡',
-        });
+    if (matches.length > 0 && matches[0][1]) {
+      hints.push({
+        tier: hints.length + 1,
+        title: phrase.title,
+        content: matches[0][0],
+        icon: HINT_ICONS[hints.length + 1] || '💡',
       });
     }
   });

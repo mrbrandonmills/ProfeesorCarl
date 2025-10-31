@@ -10,13 +10,24 @@ let currentUtterance: SpeechSynthesisUtterance | null = null;
 // Global speech rate (adjustable by user, default 0.95x)
 let globalSpeechRate = 0.95;
 
+// Preferred voice name (user-selected)
+let preferredVoiceName: string | null = null;
+
 /**
- * Get available British English voices
+ * Get all available voices
+ */
+export function getAvailableVoices(): SpeechSynthesisVoice[] {
+  if (typeof window === 'undefined') return [];
+  return window.speechSynthesis.getVoices();
+}
+
+/**
+ * Get available British English voices (for default selection)
  */
 export function getBritishVoices(): SpeechSynthesisVoice[] {
   if (typeof window === 'undefined') return [];
 
-  const voices = window.speechSynthesis.getVoices();
+  const voices = getAvailableVoices();
 
   // Prefer voices in this order:
   // 1. UK English voices (en-GB)
@@ -38,7 +49,31 @@ export function getBritishVoices(): SpeechSynthesisVoice[] {
 }
 
 /**
- * Speak text using British English voice
+ * Set preferred voice by name
+ */
+export function setPreferredVoice(voiceName: string): void {
+  preferredVoiceName = voiceName;
+}
+
+/**
+ * Get the voice to use (preferred or default British)
+ */
+function getVoiceToUse(): SpeechSynthesisVoice | null {
+  const voices = getAvailableVoices();
+
+  // Try to find preferred voice
+  if (preferredVoiceName) {
+    const preferred = voices.find(v => v.name === preferredVoiceName);
+    if (preferred) return preferred;
+  }
+
+  // Fall back to British voices
+  const britishVoices = getBritishVoices();
+  return britishVoices.length > 0 ? britishVoices[0] : null;
+}
+
+/**
+ * Speak text using selected or British English voice
  */
 export function speak(
   text: string,
@@ -52,17 +87,19 @@ export function speak(
 
   const utterance = new SpeechSynthesisUtterance(text);
 
-  // Get British voice
-  const voices = getBritishVoices();
-  if (voices.length > 0) {
-    utterance.voice = voices[0];
+  // Get preferred or default voice
+  const voice = getVoiceToUse();
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang; // Use the voice's language
+  } else {
+    utterance.lang = 'en-GB'; // Fallback to British English
   }
 
   // Configure speech parameters for natural Professor Carl voice
   utterance.rate = globalSpeechRate; // User-adjustable speech rate
   utterance.pitch = 1.0; // Natural pitch
   utterance.volume = 1.0;
-  utterance.lang = 'en-GB';
 
   utterance.onstart = () => {
     if (onStart) onStart();
