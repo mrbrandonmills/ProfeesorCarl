@@ -3,6 +3,8 @@
  * Uses Web Speech API with British English voice
  */
 
+// Track current utterance for cleanup and state management
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 /**

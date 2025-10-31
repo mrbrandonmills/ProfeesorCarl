@@ -99,7 +99,7 @@ function detectInformalHints(message: string): Hint[] {
     { pattern: /(?:So what\?[^\n]*)/gi, title: 'Relevance Check' },
   ];
 
-  hintPhrases.forEach((phrase, index) => {
+  hintPhrases.forEach((phrase) => {
     const matches = [...message.matchAll(phrase.pattern)];
     if (matches.length > 0) {
       matches.forEach((match) => {

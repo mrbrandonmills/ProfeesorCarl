@@ -1,11 +1,43 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface VoiceControlsProps {
   onTranscript: (text: string) => void;
   isListening: boolean;
   onListeningChange: (listening: boolean) => void;
+}
+
+// Type definitions for Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: {
+      new (): SpeechRecognition;
+    };
+    webkitSpeechRecognition: {
+      new (): SpeechRecognition;
+    };
+  }
 }
 
 export default function VoiceControls({
@@ -14,13 +46,21 @@ export default function VoiceControls({
   onListeningChange,
 }: VoiceControlsProps) {
   const [isSupported, setIsSupported] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const handleTranscript = useCallback((text: string) => {
+    onTranscript(text);
+  }, [onTranscript]);
+
+  const handleListeningChange = useCallback((listening: boolean) => {
+    onListeningChange(listening);
+  }, [onListeningChange]);
 
   useEffect(() => {
     // Check if browser supports Speech Recognition
     if (typeof window !== 'undefined') {
       const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
       if (SpeechRecognition) {
         setIsSupported(true);
@@ -29,7 +69,7 @@ export default function VoiceControls({
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'en-GB'; // British English
 
-        recognitionRef.current.onresult = (event: any) => {
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
           let finalTranscript = '';
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -40,15 +80,15 @@ export default function VoiceControls({
           }
 
           if (finalTranscript) {
-            onTranscript(finalTranscript.trim());
+            handleTranscript(finalTranscript.trim());
           }
         };
 
-        recognitionRef.current.onerror = (event: any) => {
+        recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error);
           if (event.error === 'no-speech' || event.error === 'aborted') {
             // Silently handle - user just stopped talking
-            onListeningChange(false);
+            handleListeningChange(false);
           }
         };
 
@@ -56,10 +96,10 @@ export default function VoiceControls({
           if (isListening) {
             // Restart if we want to keep listening
             try {
-              recognitionRef.current.start();
+              recognitionRef.current?.start();
             } catch (e) {
               console.error('Error restarting recognition:', e);
-              onListeningChange(false);
+              handleListeningChange(false);
             }
           }
         };
@@ -71,7 +111,7 @@ export default function VoiceControls({
         recognitionRef.current.stop();
       }
     };
-  }, []);
+  }, [isListening, handleTranscript, handleListeningChange]);
 
   useEffect(() => {
     if (!recognitionRef.current) return;
