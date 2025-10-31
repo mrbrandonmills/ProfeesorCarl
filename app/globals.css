@@ -19,8 +19,222 @@
   }
 }
 
+/* ===================================
+   Mobile & Desktop Optimizations
+   =================================== */
+
+/* Base HTML & Body - Mobile-first viewport handling */
+html {
+  /* Prevent text size adjustment on orientation change (iOS) */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+
+  /* Smooth scrolling for better UX */
+  scroll-behavior: smooth;
+
+  /* Better font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior-y: none;
+
+  /* Better touch scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+
+  /* Prevent user selection on UI elements (better mobile UX) */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Ensure full viewport height on mobile */
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+}
+
+/* Safe area insets for notched devices (iPhone X+, etc.) */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+}
+
+/* Touch action optimizations */
+* {
+  /* Prevent callout (iOS long-press menu) on touch-hold */
+  -webkit-touch-callout: none;
+}
+
+/* Allow text selection in input elements and content areas */
+input,
+textarea,
+[contenteditable],
+.prose {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+/* Better button tap behavior on mobile */
+button,
+a,
+[role="button"] {
+  /* Remove iOS button styling */
+  -webkit-appearance: none;
+  appearance: none;
+
+  /* Improve touch feedback */
+  touch-action: manipulation;
+
+  /* Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Cursor for desktop */
+  cursor: pointer;
+}
+
+/* Scrollbar styling for desktop (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  * {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+}
+
+/* Input styling - Better mobile UX */
+input[type="text"],
+input[type="search"],
+textarea {
+  /* Remove iOS inner shadow */
+  -webkit-appearance: none;
+  appearance: none;
+
+  /* Prevent zoom on focus (iOS) */
+  font-size: 16px;
+}
+
+/* Desktop-specific optimizations */
+@media (min-width: 640px) {
+  input[type="text"],
+  input[type="search"],
+  textarea {
+    /* Allow smaller font size on desktop */
+    font-size: 14px;
+  }
+}
+
+/* Range slider styling (for voice speed control) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Improved focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  button,
+  .no-print {
+    display: none !important;
+  }
 }

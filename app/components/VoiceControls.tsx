@@ -156,16 +156,16 @@ export default function VoiceControls({
   return (
     <button
       onClick={toggleListening}
-      className={`p-3 rounded-full transition-all ${
+      className={`p-3 rounded-xl transition-all min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center active:scale-95 ${
         isListening
-          ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
-          : 'bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900 dark:hover:bg-indigo-800 text-indigo-600 dark:text-indigo-300'
+          ? 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white animate-pulse'
+          : 'bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-300 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:active:bg-indigo-700 text-indigo-600 dark:text-indigo-300'
       }`}
       title={isListening ? 'Stop listening' : 'Click to speak'}
       type="button"
     >
       {isListening ? (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
           <path
             fillRule="evenodd"
             d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1z"
@@ -173,7 +173,7 @@ export default function VoiceControls({
           />
         </svg>
       ) : (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
           <path
             fillRule="evenodd"
             d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"
