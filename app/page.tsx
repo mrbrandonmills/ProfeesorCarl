@@ -3,8 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import HintStepper from './components/HintStepper';
 import YouTubeEmbed from './components/YouTubeEmbed';
+import VoiceControls from './components/VoiceControls';
+import VoiceSettings from './components/VoiceSettings';
 import { parseHints } from './utils/hintParser';
 import { parseVideos, isYouTubeEnabled } from './utils/youtubeParser';
+import { speak, stop, initVoices } from './utils/textToSpeech';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -33,6 +36,10 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string>('');
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice state
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   // Load chat from localStorage on mount
   useEffect(() => {
@@ -75,6 +82,11 @@ export default function Home() {
     }
   }, [sessionId]);
 
+  // Initialize voices for text-to-speech
+  useEffect(() => {
+    initVoices();
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -97,6 +109,11 @@ export default function Home() {
       localStorage.removeItem('carl_chat_messages');
       localStorage.removeItem('carl_session_id');
     }
+  };
+
+  const handleVoiceTranscript = (transcript: string) => {
+    // Add transcript to input field
+    setInput((prev) => (prev ? prev + ' ' + transcript : transcript));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,6 +178,14 @@ export default function Home() {
         setSessionId(data.sessionId);
         setSessionState(data.sessionState);
 
+        // Speak Carl's response if voice is enabled
+        if (voiceEnabled) {
+          // Stop any current speech first
+          stop();
+          // Speak the new message
+          speak(data.message);
+        }
+
         // Show warnings in console for debugging
         if (data.warnings?.length > 0) {
           console.warn('Socratic warnings:', data.warnings);
@@ -205,6 +230,10 @@ export default function Home() {
                   </span>
                 </div>
               )}
+              <VoiceSettings
+                voiceEnabled={voiceEnabled}
+                onVoiceEnabledChange={setVoiceEnabled}
+              />
               <button
                 onClick={clearChat}
                 className="text-sm px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
@@ -351,6 +380,11 @@ export default function Home() {
                 placeholder="Type your question or share your work..."
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 disabled={isLoading}
+              />
+              <VoiceControls
+                onTranscript={handleVoiceTranscript}
+                isListening={isListening}
+                onListeningChange={setIsListening}
               />
               <button
                 type="submit"
