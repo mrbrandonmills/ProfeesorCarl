@@ -8,7 +8,7 @@ const openai = new OpenAI({
 
 // Voice options (can be changed)
 const VOICE = 'alloy'; // Options: alloy, echo, fable, onyx, nova, shimmer
-const MODEL = 'tts-1'; // 'tts-1' is faster and cheaper, 'tts-1-hd' is higher quality
+const MODEL = 'tts-1-hd'; // 'tts-1' is faster and cheaper, 'tts-1-hd' is higher quality (UPGRADED)
 
 export async function POST(req: NextRequest) {
   try {
