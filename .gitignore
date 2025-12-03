@@ -48,6 +48,7 @@ next-env.d.ts
 # Testing
 coverage/
 .nyc_output/
+__tests__/screenshots/
 
 # Logs
 *.log
