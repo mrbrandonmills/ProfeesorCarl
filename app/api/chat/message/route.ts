@@ -3,9 +3,24 @@ import { verifyToken } from '@/lib/auth/jwt'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { generateSocraticResponse } from '@/lib/ai/claude'
 import { detectFrustration } from '@/lib/ai/frustration'
+import { getEnvVar } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate required env vars
+    try {
+      getEnvVar('ANTHROPIC_API_KEY')
+      getEnvVar('SUPABASE_SERVICE_ROLE_KEY')
+    } catch (envError) {
+      return NextResponse.json(
+        {
+          error: 'Server configuration error',
+          message: envError instanceof Error ? envError.message : 'Missing environment variables'
+        },
+        { status: 500 }
+      )
+    }
+
     const token = request.cookies.get('auth_token')?.value
     if (!token) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })

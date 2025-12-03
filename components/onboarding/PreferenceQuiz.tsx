@@ -19,9 +19,10 @@ export function PreferenceQuiz() {
     selected_voice: '',
   })
 
-  const handleComplete = () => {
-    // Save to localStorage for now (will connect to API later)
-    localStorage.setItem('preferences', JSON.stringify(preferences))
+  const handleComplete = (voiceId: string) => {
+    // Save to localStorage with the selected voice
+    const finalPreferences = { ...preferences, selected_voice: voiceId }
+    localStorage.setItem('preferences', JSON.stringify(finalPreferences))
     window.location.href = '/chat'
   }
 
@@ -143,10 +144,7 @@ export function PreferenceQuiz() {
                     key={voice.id}
                     variant="outline"
                     className="w-full h-20 glass-hover text-left justify-start text-lg"
-                    onClick={() => {
-                      setPreferences({ ...preferences, selected_voice: voice.id })
-                      handleComplete()
-                    }}
+                    onClick={() => handleComplete(voice.id)}
                   >
                     <div>
                       <div className="font-semibold">{voice.name}</div>

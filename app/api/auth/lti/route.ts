@@ -2,9 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { parseLTIRoles, validateLTIRequest } from '@/lib/auth/lti'
 import { signToken } from '@/lib/auth/jwt'
+import { getEnvVar } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate required env vars
+    try {
+      getEnvVar('CANVAS_CLIENT_ID')
+      getEnvVar('CANVAS_CLIENT_SECRET')
+      getEnvVar('SUPABASE_SERVICE_ROLE_KEY')
+      getEnvVar('JWT_SECRET')
+    } catch (envError) {
+      return NextResponse.json(
+        {
+          error: 'Server configuration error',
+          message: envError instanceof Error ? envError.message : 'Missing environment variables'
+        },
+        { status: 500 }
+      )
+    }
+
     // Validate LTI request
     const ltiData = validateLTIRequest(request)
 
