@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/server'
 import { generateSocraticResponse } from '@/lib/ai/claude'
 import { detectFrustration } from '@/lib/ai/frustration'
 import { getEnvVar } from '@/lib/env'
+import { retrieveStudentContext, saveStudentContext } from '@/lib/memory/mcp-client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,6 +53,20 @@ export async function POST(request: NextRequest) {
 
     const conversationHistory = messages || []
 
+    // Retrieve student context from MCP Memory
+    const studentContext = await retrieveStudentContext(payload.userId)
+
+    // Add student context to conversation history for Claude
+    const enrichedHistory = studentContext
+      ? [
+          {
+            role: 'assistant',
+            content: `[Student Context] Topics explored: ${studentContext.topics_explored.join(', ')}. Current understanding: ${studentContext.current_understanding}. Progress: ${studentContext.learning_progress}.`,
+          },
+          ...conversationHistory,
+        ]
+      : conversationHistory
+
     // Detect frustration
     const frustrationLevel = detectFrustration(message)
 
@@ -59,7 +74,7 @@ export async function POST(request: NextRequest) {
     const attemptCount = conversationHistory.filter((m) => m.role === 'user').length + 1
 
     // Generate Socratic response
-    const response = await generateSocraticResponse(message, conversationHistory, {
+    const response = await generateSocraticResponse(message, enrichedHistory, {
       attemptCount,
       frustrationLevel,
       topic: session.topics_covered[session.topics_covered.length - 1],
@@ -86,6 +101,22 @@ export async function POST(request: NextRequest) {
         frustration_level: Math.max(session.frustration_level, frustrationLevel),
       })
       .eq('id', sessionId)
+
+    // Update student context in MCP Memory
+    try {
+      const updatedTopics = session.topics_covered || []
+      const currentTopic = updatedTopics[updatedTopics.length - 1] || 'General learning'
+
+      await saveStudentContext(payload.userId, {
+        topics_explored: updatedTopics,
+        current_understanding: `Currently working on: ${currentTopic}. Frustration level: ${frustrationLevel}/10.`,
+        learning_progress: `Session ${sessionId}: ${attemptCount} attempts. Recent engagement with topic.`,
+        conversation_summary: `Last message: ${message.substring(0, 100)}... Response generated successfully.`,
+      })
+    } catch (memoryError) {
+      console.error('Failed to save student context:', memoryError)
+      // Don't fail the request if memory save fails
+    }
 
     return NextResponse.json({ response, frustrationLevel })
   } catch (error) {
