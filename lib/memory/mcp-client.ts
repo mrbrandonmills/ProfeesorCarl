@@ -69,7 +69,7 @@ export async function saveStudentContext(
           },
         },
       },
-      {}
+      {} as any
     )
   } catch (error) {
     console.error('Error saving student context to MCP Memory:', error)
@@ -97,7 +97,7 @@ export async function retrieveStudentContext(
           },
         },
       },
-      {}
+      {} as any
     )
 
     // Parse response
