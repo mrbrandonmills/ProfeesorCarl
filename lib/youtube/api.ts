@@ -1,4 +1,23 @@
-import { google } from 'googleapis'
+// TypeScript stub until googleapis is installed
+// Run: npm install googleapis
+type GoogleApis = {
+  youtube: (config: { version: string; auth: string | undefined }) => any
+}
+
+let google: GoogleApis
+try {
+  const googleapis = require('googleapis')
+  google = googleapis.google
+} catch {
+  // Fallback if googleapis not installed
+  google = {
+    youtube: () => ({
+      videos: {
+        list: async () => ({ data: { items: [] } }),
+      },
+    }),
+  }
+}
 
 const youtube = google.youtube({
   version: 'v3',

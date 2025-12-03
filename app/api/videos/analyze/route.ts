@@ -1,99 +1,135 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyToken } from '@/lib/auth/jwt'
+import { extractVideoId, getVideoMetadata } from '@/lib/youtube/api'
+import { getEnvVar } from '@/lib/env'
+import Anthropic from '@anthropic-ai/sdk'
 
-// Extract YouTube video ID from URL
-function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
-    /youtube\.com\/embed\/([^&\n?#]+)/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-
-  return null;
-}
-
-// Mock video analysis - In production, this would use YouTube API + Claude
-function mockVideoAnalysis(videoId: string) {
-  // Mock data for demonstration
-  const mockTitles = [
-    'Introduction to Kant\'s Categorical Imperative',
-    'Understanding Nietzsche\'s Will to Power',
-    'Plato\'s Cave Allegory Explained',
-    'Descartes and the Method of Doubt',
-    'Aristotle\'s Virtue Ethics',
-  ];
-
-  const mockTopics = [
-    ['ethics', 'moral philosophy', 'categorical imperative'],
-    ['existentialism', 'nihilism', 'power'],
-    ['epistemology', 'metaphysics', 'forms'],
-    ['skepticism', 'rationalism', 'mind-body problem'],
-    ['virtue ethics', 'eudaimonia', 'golden mean'],
-  ];
-
-  const mockConcepts = [
-    ['duty', 'universalizability', 'autonomy', 'reason'],
-    ['übermensch', 'eternal recurrence', 'perspectivism'],
-    ['forms', 'shadows', 'reality vs appearance'],
-    ['cogito ergo sum', 'methodical doubt', 'clear and distinct ideas'],
-    ['virtue', 'practical wisdom', 'character'],
-  ];
-
-  const difficulties: ('intro' | 'intermediate' | 'advanced')[] = [
-    'intro',
-    'intermediate',
-    'advanced',
-  ];
-
-  // Pseudo-random selection based on videoId
-  const hash = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const index = hash % mockTitles.length;
-
-  return {
-    video_id: videoId,
-    title: mockTitles[index],
-    duration: 600 + (hash % 900), // 10-25 minutes
-    topics: mockTopics[index],
-    difficulty_level: difficulties[hash % difficulties.length],
-    key_concepts: mockConcepts[index],
-  };
-}
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { youtube_url } = body;
-
-    if (!youtube_url) {
+    // Validate required env vars
+    try {
+      getEnvVar('YOUTUBE_API_KEY')
+      getEnvVar('ANTHROPIC_API_KEY')
+      getEnvVar('SUPABASE_SERVICE_ROLE_KEY')
+    } catch (envError) {
       return NextResponse.json(
-        { error: 'YouTube URL is required' },
-        { status: 400 }
-      );
+        {
+          error: 'Server configuration error',
+          message:
+            envError instanceof Error
+              ? envError.message
+              : 'Missing environment variables',
+        },
+        { status: 500 }
+      )
+    }
+
+    const token = request.cookies.get('auth_token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Only teachers can analyze videos
+    if (payload.role !== 'teacher') {
+      return NextResponse.json({ error: 'Forbidden: Teacher role required' }, { status: 403 })
+    }
+
+    const { youtubeUrl } = await request.json()
+
+    if (!youtubeUrl) {
+      return NextResponse.json({ error: 'YouTube URL is required' }, { status: 400 })
     }
 
     // Extract video ID
-    const videoId = extractVideoId(youtube_url);
+    const videoId = extractVideoId(youtubeUrl)
     if (!videoId) {
-      return NextResponse.json(
-        { error: 'Invalid YouTube URL' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 })
     }
 
-    // Mock analysis (in production, use YouTube API + Claude)
-    const analysis = mockVideoAnalysis(videoId);
+    // Get video metadata from YouTube API
+    const metadata = await getVideoMetadata(videoId)
 
-    return NextResponse.json(analysis, { status: 200 });
+    // Analyze video with Claude
+    const tagsString = metadata.tags.join(', ')
+    const analysisPrompt = `Analyze this educational video and extract key information:
+
+Title: ${metadata.title}
+Description: ${metadata.description}
+Channel: ${metadata.channelTitle}
+Tags: ${tagsString}
+
+Please provide a JSON response with:
+1. "topics": An array of main educational topics covered (e.g., ["algebra", "quadratic equations"])
+2. "difficulty": Educational level (e.g., "beginner", "intermediate", "advanced")
+3. "concepts": An array of specific concepts taught (e.g., ["factoring", "quadratic formula"])
+
+Respond ONLY with valid JSON, no additional text.`
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: 'You are an educational content analyzer. Respond only with valid JSON.',
+      messages: [
+        {
+          role: 'user',
+          content: analysisPrompt,
+        },
+      ],
+    })
+
+    const textContent = response.content.find((block) => block.type === 'text')
+    const analysisText = textContent?.type === 'text' ? textContent.text : '{}'
+
+    // Parse Claude's JSON response
+    let analysis
+    try {
+      // Remove markdown code blocks if present
+      const cleanJson = analysisText.replace(/```json\n?|\n?```/g, '').trim()
+      analysis = JSON.parse(cleanJson)
+    } catch (parseError) {
+      console.error('Failed to parse Claude response:', analysisText)
+      // Fallback to default values
+      analysis = {
+        topics: [],
+        difficulty: 'intermediate',
+        concepts: [],
+      }
+    }
+
+    // Return combined metadata and analysis
+    return NextResponse.json({
+      metadata: {
+        id: metadata.id,
+        title: metadata.title,
+        description: metadata.description,
+        thumbnailUrl: metadata.thumbnailUrl,
+        channelTitle: metadata.channelTitle,
+        publishedAt: metadata.publishedAt,
+        duration: metadata.duration,
+      },
+      analysis: {
+        topics: analysis.topics || [],
+        difficulty: analysis.difficulty || 'intermediate',
+        concepts: analysis.concepts || [],
+      },
+    })
   } catch (error) {
-    console.error('Video analysis error:', error);
+    console.error('Video analysis error:', error)
     return NextResponse.json(
-      { error: 'Failed to analyze video' },
+      {
+        error: 'Failed to analyze video',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
-    );
+    )
   }
 }
