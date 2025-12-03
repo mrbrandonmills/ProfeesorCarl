@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 4%; /* #0a0a0f */
+    --foreground: 0 0% 100%; /* white */
+    --card: 240 10% 7%; /* #111118 */
+    --card-foreground: 0 0% 100%;
+    --popover: 240 10% 10%; /* #1a1a24 */
+    --popover-foreground: 0 0% 100%;
+    --primary: 217 91% 60%; /* #3b82f6 - blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 258 90% 66%; /* #8b5cf6 - purple */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 160 84% 39%; /* #10b981 - emerald */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100% / 0.1;
+    --input: 0 0% 100% / 0.1;
+    --ring: 217 91% 60%;
+    --radius: 1rem;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-glass border border-white/10 rounded-2xl shadow-glass;
+  }
+
+  .glass-hover {
+    @apply transition-all duration-300 hover:bg-white/8 hover:border-white/20;
+  }
+
+  .text-gradient-blue-purple {
+    @apply bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent;
+  }
+
+  .aurora-bg {
+    background: radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(59, 130, 246, 0.15),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 80% 50% at 50% 120%,
+      rgba(139, 92, 246, 0.15),
+      transparent
+    );
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
