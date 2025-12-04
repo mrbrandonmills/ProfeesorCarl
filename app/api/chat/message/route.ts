@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const { message, sessionId } = await request.json()
+    const { message, sessionId, voiceStyle } = await request.json()
 
     // Get session and conversation history
     const { data: session } = await supabaseAdmin
@@ -73,11 +73,12 @@ export async function POST(request: NextRequest) {
     // Count user attempts in this session
     const attemptCount = conversationHistory.filter((m) => m.role === 'user').length + 1
 
-    // Generate Socratic response
+    // Generate Socratic response with voice personality
     const response = await generateSocraticResponse(message, enrichedHistory, {
       attemptCount,
       frustrationLevel,
       topic: session.topics_covered[session.topics_covered.length - 1],
+      voiceStyle: voiceStyle || 'alloy', // Default to alloy if not provided
     })
 
     // Save user message
