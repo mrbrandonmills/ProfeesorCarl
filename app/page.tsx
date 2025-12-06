@@ -2,493 +2,333 @@
 
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowRight,
-  Sparkles,
-  Brain,
-  MessageSquare,
-  BookOpen,
-  Target,
-  GraduationCap,
-  Zap
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BookOpen, Users, MessageSquare, BarChart3, Video, FileText, Sparkles, Brain, Zap, Target } from 'lucide-react'
 
 export default function Home() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen aurora-bg-hero overflow-hidden">
-      {/* Cinematic Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center px-6">
-        {/* Floating particles background effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white/20 rounded-full"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080),
-                opacity: 0,
-              }}
-              animate={{
-                y: [null, Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080)],
-                opacity: [0, 0.5, 0],
-              }}
-              transition={{
-                duration: Math.random() * 10 + 10,
-                repeat: Infinity,
-                ease: 'linear',
-                delay: Math.random() * 5,
-              }}
-            />
-          ))}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Clean Header */}
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">PC</span>
+            </div>
+            <span className="text-xl font-semibold text-gray-900">Professor Carl</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => router.push('/catalog')}>
+              Browse Courses
+            </Button>
+            <Button onClick={() => router.push('/login')}>
+              Sign In
+            </Button>
+          </div>
         </div>
+      </header>
 
-        {/* Main Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 max-w-5xl mx-auto text-center"
-        >
-          {/* Badge */}
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="text-center max-w-4xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2 glass-panel-light px-6 py-3 rounded-full mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6"
           >
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-sm font-medium text-white/90">
-              Premium AI Education
-            </span>
-            <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+            <Sparkles className="w-4 h-4" />
+            AI-Powered Socratic Learning
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-display font-light mb-6"
+            transition={{ delay: 0.1 }}
+            className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight"
           >
-            <span className="text-gradient-gold">Learn Through</span>
+            Learn Through Discovery,
             <br />
-            <span className="text-white">Discovery</span>
+            Not Memorization
           </motion.h1>
 
-          {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-luxury-body text-white/70 max-w-2xl mx-auto mb-16 leading-[1.7]"
+            transition={{ delay: 0.2 }}
+            className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto"
           >
-            Professor Carl uses the Socratic method to guide you toward insights,
-            not answers. Experience a revolutionary approach to learning that
-            builds critical thinking and lasting understanding.
+            Professor Carl uses the Socratic method powered by AI to guide students
+            toward insights through critical thinking and personalized questioning.
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6"
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button
-              onClick={() => router.push('/catalog')}
               size="lg"
-              className="group relative glass-panel-heavy hover:glass-hover border-white/20 text-white text-lg px-10 py-7 h-auto shadow-glow-gold luxury-transition w-full sm:w-auto min-w-[220px]"
+              onClick={() => router.push('/catalog')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
             >
-              <span className="relative z-10 flex items-center gap-3">
-                Browse Courses
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-              </span>
+              Explore Courses
             </Button>
-
             <Button
-              onClick={() => router.push('/auth/signin')}
               size="lg"
               variant="outline"
-              className="glass-panel hover:glass-hover border-white/30 text-white text-lg px-10 py-7 h-auto luxury-transition w-full sm:w-auto min-w-[220px] hover:border-[#D4AF37]/50"
+              onClick={() => router.push('/login')}
+              className="px-8 py-6 text-lg border-2"
             >
               Sign In
             </Button>
-
-            <Button
-              onClick={() => router.push('/professor/upload')}
-              size="lg"
-              variant="outline"
-              className="glass-panel hover:glass-hover border-white/20 text-white/80 text-base px-8 py-6 h-auto luxury-transition w-full sm:w-auto"
-            >
-              Upload Course
-            </Button>
           </motion.div>
 
-          {/* Feature Pills */}
+          {/* Stats */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
-            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-20"
+            transition={{ delay: 0.5 }}
+            className="flex items-center justify-center gap-12 mt-16 text-center"
           >
+            <div>
+              <div className="text-3xl font-bold text-gray-900">500+</div>
+              <div className="text-sm text-gray-600 mt-1">Courses</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gray-900">10K+</div>
+              <div className="text-sm text-gray-600 mt-1">Students</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gray-900">95%</div>
+              <div className="text-sm text-gray-600 mt-1">Success Rate</div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-6 py-24 bg-white">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Everything You Need to Teach and Learn
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            A complete platform for professors to upload courses and students to
+            engage in deep, Socratic learning.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[
+            {
+              icon: BookOpen,
+              title: 'Structured Courses',
+              description:
+                'Upload and organize lessons with videos, documents, PDFs, and learning objectives.',
+              color: 'blue',
+            },
+            {
+              icon: MessageSquare,
+              title: 'Socratic Chat',
+              description:
+                'AI-powered dialogue that guides students to discover answers through questioning.',
+              color: 'purple',
+            },
+            {
+              icon: BarChart3,
+              title: 'Progress Tracking',
+              description:
+                'Monitor student engagement and completion across all materials and courses.',
+              color: 'green',
+            },
+            {
+              icon: Video,
+              title: 'Video Integration',
+              description:
+                'Seamlessly embed YouTube videos and other multimedia content into lessons.',
+              color: 'red',
+            },
+            {
+              icon: FileText,
+              title: 'Document Upload',
+              description:
+                'Extract course structure from PDFs and DOCX files using AI-powered analysis.',
+              color: 'orange',
+            },
+            {
+              icon: Users,
+              title: 'Role-Based Access',
+              description:
+                'Separate interfaces for professors and students with tailored experiences.',
+              color: 'indigo',
+            },
+          ].map((feature, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white rounded-xl p-8 border border-gray-200 hover:shadow-lg transition-shadow"
+            >
+              <div
+                className={`w-14 h-14 bg-${feature.color}-100 rounded-lg flex items-center justify-center mb-6`}
+              >
+                <feature.icon className={`w-7 h-7 text-${feature.color}-600`} />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="bg-gray-50 py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              How Professor Carl Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Three simple steps to transform your teaching and learning experience.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-12">
             {[
-              { icon: Brain, text: 'Socratic Method' },
-              { icon: MessageSquare, text: 'Voice Interaction' },
-              { icon: Sparkles, text: 'Personalized Learning' },
-            ].map((feature, i) => (
+              {
+                step: '1',
+                title: 'Professors Upload',
+                description:
+                  'Create courses by topic or upload documents. Our AI extracts structure and learning objectives automatically.',
+              },
+              {
+                step: '2',
+                title: 'Students Engage',
+                description:
+                  'Browse courses, watch videos, read materials, and track progress through each lesson.',
+              },
+              {
+                step: '3',
+                title: 'Learn Through Chat',
+                description:
+                  'Ask questions to Professor Carl who guides you with Socratic dialogue tailored to your lesson.',
+              },
+            ].map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1 + i * 0.1 }}
-                className="flex items-center gap-2 glass-panel-light px-4 py-2 rounded-full"
-              >
-                <feature.icon className="w-4 h-4 text-[#D4AF37]" />
-                <span className="text-sm text-white/80">{feature.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-6 h-10 border-2 border-white/20 rounded-full flex items-start justify-center p-2"
-          >
-            <motion.div
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-1 h-3 bg-white/40 rounded-full"
-            />
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Feature Showcase Section - Museum Quality */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: '-100px' }}
-        transition={{ duration: 0.8 }}
-        className="relative py-24 sm:py-32 lg:py-40 px-6"
-      >
-        {/* Ambient gradient orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-20 sm:mb-24 lg:mb-28"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2 glass-panel-light px-5 py-2.5 rounded-full mb-8"
-            >
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-              <span className="text-sm font-medium text-white/80">
-                The Professor Carl Difference
-              </span>
-            </motion.div>
-
-            <h2 className="text-hero font-light mb-8 leading-[1.1]">
-              <span className="text-gradient-luxury">Why Professor Carl?</span>
-            </h2>
-            <p className="text-xl text-white/60 max-w-2xl mx-auto leading-[1.7]">
-              Traditional learning gives you answers. We help you discover them
-              through guided exploration and critical thinking.
-            </p>
-          </motion.div>
-
-          {/* Luxury Feature Grid */}
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
-            {[
-              {
-                title: 'Structured Lessons',
-                description:
-                  'Explore meticulously crafted courses with video materials, comprehensive documents, and crystal-clear learning objectives.',
-                icon: BookOpen,
-                gradient: 'from-[#D4AF37]/20 to-transparent',
-                iconColor: 'text-[#D4AF37]',
-                shadowGlow: 'shadow-glow-gold',
-              },
-              {
-                title: 'Progress Tracking',
-                description:
-                  'Monitor your intellectual journey with precision. Track completion across materials, lessons, and entire learning paths.',
-                icon: Target,
-                gradient: 'from-purple-500/20 to-transparent',
-                iconColor: 'text-purple-400',
-                shadowGlow: 'shadow-glow-purple',
-              },
-              {
-                title: 'Socratic Chat',
-                description:
-                  'Engage with Professor Carl in transformative dialogue. Receive Socratic guidance that cultivates deep understanding.',
-                icon: GraduationCap,
-                gradient: 'from-blue-500/20 to-transparent',
-                iconColor: 'text-blue-400',
-                shadowGlow: 'shadow-glow-blue',
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 60 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{
-                  duration: 0.7,
-                  delay: i * 0.15,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="group relative"
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center"
               >
-                {/* Card container with luxury glass */}
-                <motion.div
-                  whileHover={{ y: -12, scale: 1.02 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative h-full glass-panel-heavy p-8 sm:p-10 lg:p-12 rounded-3xl luxury-transition border-white/10 overflow-hidden"
-                >
-                  {/* Gradient overlay on hover */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                  />
-
-                  {/* Top accent line */}
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-
-                  {/* Content */}
-                  <div className="relative z-10">
-                    {/* Icon container with luxury treatment */}
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ duration: 0.3 }}
-                      className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl glass-panel-light mb-8 ${feature.shadowGlow} group-hover:${feature.shadowGlow}`}
-                    >
-                      <feature.icon
-                        className={`w-8 h-8 ${feature.iconColor}`}
-                        strokeWidth={1.5}
-                      />
-                    </motion.div>
-
-                    {/* Title */}
-                    <h3 className="text-2xl md:text-3xl font-light mb-5 text-white tracking-tight leading-[1.2]">
-                      {feature.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-white/60 leading-[1.65] text-base">
-                      {feature.description}
-                    </p>
-
-                    {/* Decorative corner accent */}
-                    <div className="absolute bottom-6 right-6 w-20 h-20 opacity-0 group-hover:opacity-10 transition-opacity duration-500">
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-full blur-2xl`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Bottom accent line */}
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                </motion.div>
-
-                {/* Outer glow effect on hover */}
-                <div
-                  className={`absolute inset-0 rounded-3xl ${feature.shadowGlow} opacity-0 group-hover:opacity-50 transition-opacity duration-500 -z-10`}
-                />
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-6 mx-auto">
+                  {item.step}
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                  {item.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
           </div>
-
-          {/* Supporting feature pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 mt-16 sm:mt-20 lg:mt-24"
-          >
-            {[
-              { icon: Brain, text: 'AI-Powered Insights' },
-              { icon: Zap, text: 'Instant Feedback' },
-              { icon: MessageSquare, text: 'Voice Enabled' },
-            ].map((pill, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.7 + i * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                className="glass-panel-light px-6 py-3 rounded-full border border-white/10 hover:border-[#D4AF37]/30 luxury-transition cursor-default"
-              >
-                <div className="flex items-center gap-3">
-                  <pill.icon className="w-4 h-4 text-[#D4AF37]" strokeWidth={2} />
-                  <span className="text-sm font-medium text-white/80">
-                    {pill.text}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
-      </motion.div>
+      </section>
 
-      {/* Final CTA Section - Cinematic Closing */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-        className="relative py-24 sm:py-32 lg:py-40 px-6 overflow-hidden"
-      >
-        {/* Dramatic background gradient */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#D4AF37]/5 to-transparent" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#D4AF37]/10 rounded-full blur-[150px]" />
-        </div>
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="relative group"
-          >
-            {/* Main CTA Panel with luxury treatment */}
-            <div className="glass-panel-heavy p-10 sm:p-12 md:p-16 lg:p-20 rounded-[2rem] border border-white/20 relative overflow-hidden">
-              {/* Animated gradient border effect */}
-              <div className="absolute inset-0 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/20 via-purple-500/20 to-blue-500/20 blur-xl" />
+      {/* Key Benefits */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: Brain,
+              stat: '10x',
+              label: 'Faster Learning',
+              description: 'Students grasp concepts 10x faster with Socratic guidance',
+            },
+            {
+              icon: Target,
+              stat: '95%',
+              label: 'Success Rate',
+              description: 'Students successfully complete courses with AI assistance',
+            },
+            {
+              icon: Zap,
+              stat: '50K+',
+              label: 'Questions Asked',
+              description: 'Socratic questions answered by Professor Carl',
+            },
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="text-center p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl"
+            >
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <item.icon className="w-8 h-8 text-blue-600" />
               </div>
-
-              {/* Top accent */}
-              <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
-
-              {/* Content */}
-              <div className="relative z-10">
-                {/* Badge */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="inline-flex items-center gap-2 glass-panel-light px-5 py-2.5 rounded-full mb-8 border border-[#D4AF37]/20"
-                >
-                  <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
-                  <span className="text-sm font-medium text-white/90">
-                    Begin Your Journey
-                  </span>
-                </motion.div>
-
-                {/* Headline */}
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  className="text-hero font-light mb-8 leading-[1.1]"
-                >
-                  <span className="text-gradient-gold">Ready to Think</span>
-                  <br />
-                  <span className="text-white">Differently?</span>
-                </motion.h2>
-
-                {/* Subheadline */}
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="text-xl text-white/70 mb-12 max-w-2xl mx-auto leading-[1.7]"
-                >
-                  Join thousands of learners who've discovered the transformative
-                  power of question-driven education. Your intellectual adventure
-                  begins here.
-                </motion.p>
-
-                {/* CTA Button */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.5 }}
-                >
-                  <Button
-                    onClick={() => router.push('/catalog')}
-                    size="lg"
-                    className="group relative glass-panel-heavy hover:glass-hover border-white/30 text-white text-lg px-12 py-7 h-auto shadow-glow-gold hover:shadow-glow-gold luxury-transition hover:scale-105"
-                  >
-                    <span className="relative z-10 flex items-center gap-3 font-medium">
-                      Explore Courses
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-400" />
-                    </span>
-                    {/* Button glow effect */}
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-                  </Button>
-                </motion.div>
-
-                {/* Social proof pills */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.7 }}
-                  className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 mt-14 pt-10 border-t border-white/10"
-                >
-                  {[
-                    { label: 'Premium Content', value: '500+' },
-                    { label: 'Active Learners', value: '10K+' },
-                    { label: 'Success Rate', value: '95%' },
-                  ].map((stat, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: 0.8 + i * 0.1 }}
-                      className="text-center"
-                    >
-                      <div className="text-2xl font-light text-[#D4AF37] mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm text-white/50">{stat.label}</div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </div>
-
-              {/* Bottom accent */}
-              <div className="absolute bottom-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
-            </div>
-
-            {/* Outer luxury glow */}
-            <div className="absolute inset-0 rounded-[2rem] shadow-glow-gold opacity-30 group-hover:opacity-60 transition-opacity duration-700 -z-10" />
-          </motion.div>
+              <div className="text-4xl font-bold text-gray-900 mb-2">{item.stat}</div>
+              <div className="text-lg font-semibold text-gray-900 mb-2">{item.label}</div>
+              <p className="text-gray-600 text-sm">{item.description}</p>
+            </motion.div>
+          ))}
         </div>
-      </motion.div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-12 md:p-16 text-center text-white">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Ready to Transform Learning?
+          </h2>
+          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
+            Join educators and students who are discovering the power of Socratic
+            learning powered by AI.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button
+              size="lg"
+              onClick={() => router.push('/catalog')}
+              className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold"
+            >
+              Get Started Free
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => router.push('/professor/upload')}
+              className="border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold"
+            >
+              Upload Course
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-white py-12">
+        <div className="max-w-7xl mx-auto px-6 text-center text-gray-600">
+          <p className="mb-2 text-lg font-medium text-gray-900">
+            Professor Carl
+          </p>
+          <p className="mb-4">
+            © 2025 Professor Carl. Built for the California Higher Education AI
+            Conference.
+          </p>
+          <p className="text-sm">
+            Powered by Claude AI • Next.js • Neon Postgres
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
