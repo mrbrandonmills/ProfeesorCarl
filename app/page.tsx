@@ -62,20 +62,12 @@ export default function Home() {
 
         <div className="max-w-7xl w-full grid lg:grid-cols-2 gap-16 items-center relative z-10">
           {/* Left Side - Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
+          <div>
             {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-cyan-50 border border-emerald-200/50 mb-8"
-            >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-cyan-50 border border-emerald-200/50 mb-8">
               <Star className="w-4 h-4 text-emerald-600 fill-emerald-600" />
               <span className="text-sm font-semibold text-emerald-900">AI-Powered Socratic Learning</span>
-            </motion.div>
+            </div>
 
             {/* Massive Title */}
             <h1 className="text-7xl lg:text-8xl font-black text-gray-900 mb-6 leading-[0.9] tracking-tight">
@@ -125,28 +117,18 @@ export default function Home() {
                 { value: '10K+', label: 'Students' },
                 { value: '95%', label: 'Success Rate' },
               ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.1 }}
-                >
+                <div key={i}>
                   <div className="text-3xl font-black bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
                     {stat.value}
                   </div>
                   <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Right Side - 3D Card Stack */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative h-[600px] hidden lg:block"
-          >
+          <div className="relative h-[600px] hidden lg:block">
             {/* Floating Cards */}
             <motion.div
               animate={{
@@ -204,7 +186,7 @@ export default function Home() {
               <h3 className="text-xl font-bold text-gray-900 mb-2">Track Progress</h3>
               <p className="text-gray-600">Real-time insights into your learning journey</p>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
