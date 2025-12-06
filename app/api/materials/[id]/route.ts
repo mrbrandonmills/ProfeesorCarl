@@ -13,12 +13,12 @@ async function getDbClient() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const client = await getDbClient()
 
   try {
-    const materialId = params.id
+    const { id: materialId } = await params
 
     // Verify authentication
     const token = request.cookies.get('auth_token')?.value
