@@ -90,23 +90,23 @@ export default function Home() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/catalog')}
               size="lg"
               className="group relative glass-panel-heavy hover:glass-hover border-white/20 text-white text-lg px-8 py-6 h-auto shadow-glow-gold luxury-transition"
             >
               <span className="relative z-10 flex items-center gap-3">
-                Get Started
+                Browse Courses
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Button>
 
             <Button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/professor/upload')}
               size="lg"
               variant="outline"
               className="glass-panel hover:glass-hover border-white/20 text-white text-lg px-8 py-6 h-auto luxury-transition"
             >
-              Student Portal
+              Upload Course
             </Button>
           </motion.div>
 
@@ -186,19 +186,19 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: 'Socratic Dialogue',
-                description: 'Guided questions that lead to profound understanding, not memorization.',
+                title: 'Structured Lessons',
+                description: 'Browse courses with video materials, documents, and guided learning objectives.',
+                icon: '📚',
+              },
+              {
+                title: 'Progress Tracking',
+                description: 'Track your completion across materials, lessons, and entire courses.',
+                icon: '✅',
+              },
+              {
+                title: 'Socratic Chat',
+                description: 'Ask Professor Carl questions about your lessons and get Socratic guidance.',
                 icon: '🎓',
-              },
-              {
-                title: 'Voice Interaction',
-                description: 'Natural conversations that feel like learning from a real professor.',
-                icon: '🎤',
-              },
-              {
-                title: 'Adaptive Learning',
-                description: 'Personalized paths that match your learning style and pace.',
-                icon: '🧠',
               },
             ].map((feature, i) => (
               <motion.div
@@ -247,12 +247,12 @@ export default function Home() {
               question-driven education.
             </p>
             <Button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/catalog')}
               size="lg"
               className="group glass-panel-heavy hover:glass-hover border-white/20 text-white text-lg px-10 py-6 h-auto shadow-glow-gold luxury-transition"
             >
               <span className="flex items-center gap-3">
-                Begin Your Journey
+                Explore Courses
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Button>
