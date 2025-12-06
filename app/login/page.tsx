@@ -57,7 +57,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen aurora-bg-hero flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -65,24 +65,24 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         {/* Login Card */}
-        <div className="glass-panel-heavy p-10 rounded-3xl">
+        <div className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-2xl p-10 rounded-3xl">
           {/* Header */}
           <div className="text-center mb-8">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-4xl font-light mb-3"
+              className="text-4xl font-bold mb-3"
             >
-              <span className="text-gradient-gold">Welcome to</span>
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Welcome to</span>
               <br />
-              <span className="text-white">Professor Carl</span>
+              <span className="text-slate-900">Professor Carl</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-white/60"
+              className="text-slate-600"
             >
               {mode === 'professor' ? 'Professor Login' : 'Student Login'}
             </motion.p>
@@ -93,14 +93,14 @@ export default function LoginPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex gap-2 p-1.5 glass-panel-light rounded-xl mb-8"
+            className="flex gap-2 p-1.5 bg-slate-100 rounded-xl mb-8"
           >
             <button
               onClick={() => setMode('professor')}
-              className={`flex-1 px-4 py-3 rounded-lg luxury-transition flex items-center justify-center gap-2 ${
+              className={`flex-1 px-4 py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                 mode === 'professor'
-                  ? 'glass-panel-heavy shadow-glow-gold text-white'
-                  : 'text-white/50 hover:text-white/80'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <GraduationCap className="w-4 h-4" />
@@ -108,10 +108,10 @@ export default function LoginPage() {
             </button>
             <button
               onClick={() => setMode('student')}
-              className={`flex-1 px-4 py-3 rounded-lg luxury-transition flex items-center justify-center gap-2 ${
+              className={`flex-1 px-4 py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                 mode === 'student'
-                  ? 'glass-panel-heavy shadow-glow-blue text-white'
-                  : 'text-white/50 hover:text-white/80'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -129,7 +129,7 @@ export default function LoginPage() {
           >
             {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email
               </label>
               <Input
@@ -137,13 +137,13 @@ export default function LoginPage() {
                 placeholder={mode === 'professor' ? 'professor@university.edu' : 'student@university.edu'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="glass-panel border-white/20 text-white placeholder:text-white/40"
+                className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Password
               </label>
               <Input
@@ -151,16 +151,16 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="glass-panel border-white/20 text-white placeholder:text-white/40"
+                className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
             {/* Mock Credentials Hint */}
-            <div className="glass-panel-light p-3 rounded-lg">
-              <p className="text-xs text-white/50 text-center mb-1">
+            <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg">
+              <p className="text-xs text-blue-600 text-center mb-1 font-medium">
                 Mock credentials for testing:
               </p>
-              <p className="text-xs font-mono text-white/70 text-center">
+              <p className="text-xs font-mono text-blue-700 text-center">
                 {mode === 'professor' ? 'professor@university.edu' : 'student@university.edu'} / any password
               </p>
             </div>
@@ -168,7 +168,7 @@ export default function LoginPage() {
             {/* Sign In Button */}
             <Button
               type="submit"
-              className="w-full glass-panel-heavy hover:glass-hover border-white/20 text-white shadow-glow-gold luxury-transition py-6"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all py-6 font-semibold text-base"
             >
               Sign In
             </Button>
@@ -179,12 +179,12 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="text-center text-sm text-white/60 mt-6"
+            className="text-center text-sm text-slate-600 mt-6"
           >
             {mode === 'professor' ? 'Are you a student?' : 'Are you a professor?'}{' '}
             <button
               onClick={() => setMode(mode === 'professor' ? 'student' : 'professor')}
-              className="text-[#D4AF37] hover:underline luxury-transition"
+              className="text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
             >
               {mode === 'professor' ? 'Student Login' : 'Professor Login'}
             </button>
@@ -196,23 +196,23 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.7 }}
-          className="mt-8 glass-panel p-6 rounded-2xl"
+          className="mt-8 bg-white/60 backdrop-blur-lg border border-slate-200/50 p-6 rounded-2xl shadow-lg"
         >
-          <h3 className="text-center text-sm font-medium text-white/70 mb-4">
+          <h3 className="text-center text-sm font-medium text-slate-700 mb-4">
             Quick Testing Access
           </h3>
           <div className="flex gap-3">
             <Button
               onClick={() => handleQuickAccess('professor')}
               variant="outline"
-              className="flex-1 glass-panel hover:glass-hover border-white/20 text-white luxury-transition"
+              className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
               Login as Professor
             </Button>
             <Button
               onClick={() => handleQuickAccess('student')}
               variant="outline"
-              className="flex-1 glass-panel hover:glass-hover border-white/20 text-white luxury-transition"
+              className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
             >
               Login as Student
             </Button>
@@ -228,7 +228,7 @@ export default function LoginPage() {
         >
           <button
             onClick={() => router.push('/')}
-            className="text-sm text-white/50 hover:text-white/80 luxury-transition"
+            className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
           >
             ← Back to Home
           </button>
