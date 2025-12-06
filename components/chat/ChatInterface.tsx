@@ -13,6 +13,14 @@ interface Message {
   content: string
 }
 
+interface LessonContext {
+  lessonId: string
+  lessonTitle: string
+  objectives: string[]
+  materialTitle: string
+  materialType: string
+}
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -20,12 +28,24 @@ export function ChatInterface() {
   const [isRecording, setIsRecording] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [sessionId, setSessionId] = useState<string>('')
+  const [lessonContext, setLessonContext] = useState<LessonContext | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   useEffect(() => {
+    // Check for lesson context in sessionStorage
+    const storedContext = sessionStorage.getItem('lessonContext')
+    if (storedContext) {
+      try {
+        const context = JSON.parse(storedContext)
+        setLessonContext(context)
+      } catch (error) {
+        console.error('Failed to parse lesson context:', error)
+      }
+    }
+
     // Initialize session
     const initSession = async () => {
       try {
@@ -33,11 +53,15 @@ export function ChatInterface() {
         const data = await response.json()
         setSessionId(data.sessionId)
 
-        // Add greeting message
+        // Add context-aware greeting message
+        const greetingMessage = storedContext
+          ? `Hi! I'm Professor Carl. I see you're working on "${JSON.parse(storedContext).materialTitle}" from the lesson "${JSON.parse(storedContext).lessonTitle}". I'll guide you through understanding this material using questions. What would you like to explore?`
+          : "Hi! I'm Professor Carl. I don't give direct answers - instead, I'll guide you to discover insights through questions. What would you like to explore today?"
+
         setMessages([{
           id: '1',
           role: 'assistant',
-          content: "Hi! I'm Professor Carl. I don't give direct answers - instead, I'll guide you to discover insights through questions. What would you like to explore today?"
+          content: greetingMessage
         }])
       } catch (error) {
         console.error('Failed to initialize session:', error)
@@ -117,7 +141,8 @@ export function ChatInterface() {
         body: JSON.stringify({
           message: input,
           sessionId,
-          voiceStyle
+          voiceStyle,
+          lessonContext: lessonContext // Pass lesson context to API
         })
       })
 
@@ -234,6 +259,21 @@ export function ChatInterface() {
           <p className="text-sm text-white/60">
             Your Socratic AI Tutor • Discover through questions
           </p>
+          {lessonContext && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-4 flex items-center gap-2 text-xs"
+            >
+              <div className="px-3 py-1.5 rounded-full glass-panel-light border border-[#D4AF37]/20">
+                <span className="text-[#D4AF37] font-medium">📚 {lessonContext.lessonTitle}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-full glass-panel-light border border-white/10">
+                <span className="text-white/70">{lessonContext.materialTitle}</span>
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.div>
 

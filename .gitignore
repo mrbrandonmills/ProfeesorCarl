@@ -52,3 +52,4 @@ __tests__/screenshots/
 
 # Logs
 *.log
+.env*.local

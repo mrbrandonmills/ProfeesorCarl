@@ -4,6 +4,14 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+interface LessonContext {
+  lessonId: string
+  lessonTitle: string
+  objectives: string[]
+  materialTitle: string
+  materialType: string
+}
+
 export async function generateSocraticResponse(
   userMessage: string,
   conversationHistory: Array<{ role: string; content: string }>,
@@ -12,6 +20,7 @@ export async function generateSocraticResponse(
     frustrationLevel: number
     topic?: string
     voiceStyle?: string
+    lessonContext?: LessonContext | null
   }
 ): Promise<string> {
   // Determine voice personality
@@ -25,9 +34,23 @@ export async function generateSocraticResponse(
     ? voicePersonalities[context.voiceStyle as keyof typeof voicePersonalities]
     : 'warm and supportive'
 
+  // Build lesson context section if available
+  const lessonContextSection = context.lessonContext
+    ? `
+LESSON CONTEXT:
+You are guiding the student through: "${context.lessonContext.lessonTitle}"
+Current material: "${context.lessonContext.materialTitle}" (${context.lessonContext.materialType})
+
+Learning Objectives for this lesson:
+${context.lessonContext.objectives.map((obj, i) => `${i + 1}. ${obj}`).join('\n')}
+
+IMPORTANT: Guide your questions toward helping the student achieve these learning objectives. Reference the material they're studying when relevant.`
+    : ''
+
   const systemPrompt = `You are Professor Carl, a Socratic tutor who helps students learn through guided questioning.
 
 PERSONALITY: You are ${personality} in your teaching style.
+${lessonContextSection}
 
 CORE PRINCIPLES:
 - For greetings (hi, hello, hey, etc.), respond warmly and naturally - DON'T treat them as questions
@@ -44,6 +67,7 @@ SOCRATIC QUESTIONING (for actual learning topics):
 - Guide students to discover insights themselves
 - Build on their previous responses
 - Encourage critical thinking and reflection
+${context.lessonContext ? '- Connect questions to the lesson objectives above\n- Reference the material they\'re studying when appropriate' : ''}
 
 HINT ESCALATION:
 - Attempts 1-2: Pure Socratic questions, no hints
@@ -52,7 +76,7 @@ HINT ESCALATION:
 - Frustration level ${context.frustrationLevel}/10
 
 Current attempt: ${context.attemptCount}
-Current topic: ${context.topic || 'Unknown'}
+Current topic: ${context.topic || context.lessonContext?.lessonTitle || 'Unknown'}
 
 IMPORTANT: Match your teaching style to the ${personality} personality.`
 

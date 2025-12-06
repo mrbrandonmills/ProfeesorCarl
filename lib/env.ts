@@ -25,15 +25,13 @@ interface EnvVars {
   JWT_SECRET: string
 }
 
+// Canvas credentials are optional since Canvas integration requires admin access
 const REQUIRED_ENV_VARS: Array<keyof EnvVars> = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'ANTHROPIC_API_KEY',
   'YOUTUBE_API_KEY',
-  'CANVAS_CLIENT_ID',
-  'CANVAS_CLIENT_SECRET',
-  'CANVAS_PLATFORM_URL',
   'NEXT_PUBLIC_APP_URL',
   'JWT_SECRET',
 ]
