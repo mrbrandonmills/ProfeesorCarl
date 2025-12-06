@@ -127,10 +127,10 @@ export default function MaterialPlayerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen aurora-bg flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-          <div className="w-16 h-16 border-4 border-[#D4AF37]/20 border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Loading material...</p>
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Loading material...</p>
         </motion.div>
       </div>
     )
@@ -138,10 +138,10 @@ export default function MaterialPlayerPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen aurora-bg flex items-center justify-center p-6">
-        <Card className="glass-panel p-8 max-w-md text-center">
-          <p className="text-red-400 mb-4">Failed to load material</p>
-          <Button onClick={() => router.back()} variant="outline" className="glass-panel hover:glass-hover">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
+        <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-8 max-w-md text-center">
+          <p className="text-red-600 mb-4">Failed to load material</p>
+          <Button onClick={() => router.back()} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
             Go Back
           </Button>
         </Card>
@@ -153,40 +153,40 @@ export default function MaterialPlayerPage() {
   const embedUrl = material.type === 'video' ? getYouTubeEmbedUrl(material.content_url) : null
 
   return (
-    <div className="min-h-screen aurora-bg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header Bar */}
-      <div className="glass-panel-heavy border-b border-white/10">
+      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               onClick={() => router.push(`/course/${lesson.course_id}`)}
-              className="glass-panel hover:glass-hover"
+              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Course
             </Button>
-            <div className="h-8 w-px bg-white/10" />
+            <div className="h-8 w-px bg-slate-200" />
             <div>
-              <p className="text-white/50 text-sm">{lesson.course_title}</p>
-              <h2 className="text-white font-medium">{lesson.title}</h2>
+              <p className="text-slate-500 text-sm">{lesson.course_title}</p>
+              <h2 className="text-slate-800 font-medium">{lesson.title}</h2>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {progress.status === 'completed' ? (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-panel-light">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 text-sm">Completed</span>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-200">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <span className="text-green-600 text-sm font-medium">Completed</span>
               </div>
             ) : (
               <Button
                 onClick={handleComplete}
                 disabled={completing}
-                className="glass-panel-heavy hover:glass-hover border-white/20 text-white shadow-glow-gold luxury-transition group"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 group"
               >
                 {completing ? (
                   <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Marking Complete...
                   </span>
                 ) : (
@@ -199,7 +199,7 @@ export default function MaterialPlayerPage() {
             )}
             <Button
               onClick={startChatWithContext}
-              className="glass-panel hover:glass-hover border-[#D4AF37]/30 text-[#D4AF37] hover:shadow-glow-gold luxury-transition group"
+              className="bg-white hover:bg-blue-50 border border-blue-300 text-blue-600 hover:text-blue-700 hover:border-blue-400 shadow-md hover:shadow-lg transition-all duration-300 group"
             >
               <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
               Ask Professor Carl
@@ -217,10 +217,10 @@ export default function MaterialPlayerPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="text-3xl font-light text-gradient-gold mb-2">
+              <h1 className="text-3xl font-light bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent mb-2">
                 {material.title}
               </h1>
-              <div className="flex items-center gap-2 text-white/50 text-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-sm">
                 {material.type === 'video' && <Youtube className="w-4 h-4" />}
                 {material.type === 'document' && <FileText className="w-4 h-4" />}
                 {material.type === 'link' && <ExternalLink className="w-4 h-4" />}
@@ -240,7 +240,7 @@ export default function MaterialPlayerPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="glass-panel p-0 overflow-hidden">
+              <Card className="bg-white backdrop-blur-xl border border-slate-200/50 shadow-lg p-0 overflow-hidden">
                 {material.type === 'video' && embedUrl ? (
                   <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                     <iframe
@@ -252,12 +252,12 @@ export default function MaterialPlayerPage() {
                   </div>
                 ) : material.type === 'pdf' || material.type === 'document' ? (
                   <div className="p-8 text-center">
-                    <FileText className="w-16 h-16 text-[#D4AF37] mx-auto mb-4" />
-                    <p className="text-white mb-4">Document Viewer</p>
+                    <FileText className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                    <p className="text-slate-700 mb-4">Document Viewer</p>
                     <Button
                       onClick={() => window.open(material.content_url, '_blank')}
                       variant="outline"
-                      className="glass-panel hover:glass-hover border-white/20 text-white"
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Open in New Tab
@@ -265,12 +265,12 @@ export default function MaterialPlayerPage() {
                   </div>
                 ) : (
                   <div className="p-8 text-center">
-                    <ExternalLink className="w-16 h-16 text-[#D4AF37] mx-auto mb-4" />
-                    <p className="text-white mb-4">External Resource</p>
+                    <ExternalLink className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                    <p className="text-slate-700 mb-4">External Resource</p>
                     <Button
                       onClick={() => window.open(material.content_url, '_blank')}
                       variant="outline"
-                      className="glass-panel hover:glass-hover border-white/20 text-white"
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Open Link
@@ -287,9 +287,9 @@ export default function MaterialPlayerPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card className="glass-panel p-6">
-                  <h3 className="text-xl font-light text-white mb-4">Transcript</h3>
-                  <div className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+                <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-6">
+                  <h3 className="text-xl font-light text-slate-800 mb-4">Transcript</h3>
+                  <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
                     {material.transcript}
                   </div>
                 </Card>
@@ -305,18 +305,18 @@ export default function MaterialPlayerPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="glass-panel p-6">
+              <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <BookOpen className="w-5 h-5 text-[#D4AF37]" />
-                  <h3 className="text-lg font-light text-white">Learning Objectives</h3>
+                  <BookOpen className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-light text-slate-800">Learning Objectives</h3>
                 </div>
                 <ul className="space-y-3">
                   {lesson.objectives.map((objective, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full glass-panel-light flex items-center justify-center flex-shrink-0 text-[#D4AF37] text-sm">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 flex items-center justify-center flex-shrink-0 text-blue-600 text-sm font-medium">
                         {i + 1}
                       </div>
-                      <p className="text-white/70 text-sm">{objective}</p>
+                      <p className="text-slate-600 text-sm">{objective}</p>
                     </li>
                   ))}
                 </ul>
@@ -329,20 +329,20 @@ export default function MaterialPlayerPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Card className="glass-panel p-6 border-[#D4AF37]/20">
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/50 shadow-lg p-6">
                 <div className="text-center">
-                  <div className="w-12 h-12 rounded-full glass-panel-light flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                  <div className="w-12 h-12 rounded-full bg-white border border-blue-200 flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-light text-white mb-2">
+                  <h3 className="text-lg font-light text-slate-800 mb-2">
                     Have Questions?
                   </h3>
-                  <p className="text-white/60 text-sm mb-4">
+                  <p className="text-slate-600 text-sm mb-4">
                     Ask Professor Carl to guide you through this material using the Socratic method
                   </p>
                   <Button
                     onClick={startChatWithContext}
-                    className="w-full glass-panel-heavy hover:glass-hover border-[#D4AF37]/30 text-white shadow-glow-gold luxury-transition group"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 group"
                   >
                     <MessageSquare className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                     Start Discussion
@@ -357,28 +357,28 @@ export default function MaterialPlayerPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="glass-panel-light p-4">
-                <p className="text-xs text-white/50 mb-2">Your Progress</p>
+              <Card className="bg-slate-50/80 backdrop-blur-sm border border-slate-200/50 shadow-sm p-4">
+                <p className="text-xs text-slate-500 mb-2">Your Progress</p>
                 <div className="flex items-center gap-2">
                   {progress.status === 'completed' ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span className="text-sm text-green-400">Completed</span>
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span className="text-sm text-green-600 font-medium">Completed</span>
                     </>
                   ) : progress.status === 'in_progress' ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm text-[#D4AF37]">In Progress</span>
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-blue-600 font-medium">In Progress</span>
                     </>
                   ) : (
                     <>
-                      <div className="w-4 h-4 rounded-full border-2 border-white/30" />
-                      <span className="text-sm text-white/50">Not Started</span>
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                      <span className="text-sm text-slate-500">Not Started</span>
                     </>
                   )}
                 </div>
                 {progress.time_spent_seconds > 0 && (
-                  <p className="text-xs text-white/40 mt-2">
+                  <p className="text-xs text-slate-500 mt-2">
                     Time spent: {Math.round(progress.time_spent_seconds / 60)} minutes
                   </p>
                 )}

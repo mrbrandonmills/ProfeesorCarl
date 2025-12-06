@@ -46,10 +46,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] aurora-bg flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-blue-400 animate-spin" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+          <p className="text-slate-600">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -60,7 +60,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] aurora-bg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <motion.div
@@ -69,10 +69,10 @@ export default function DashboardPage() {
           transition={{ duration: 0.4 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-gradient-blue-purple mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
             Professor Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-slate-600">
             Manage your teaching content and track student progress
           </p>
         </motion.div>

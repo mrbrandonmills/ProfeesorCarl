@@ -243,20 +243,20 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background aurora-bg">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Premium Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="glass-panel-heavy m-6 p-6 relative overflow-hidden"
+        className="bg-white border border-slate-200 shadow-sm m-6 p-6 rounded-2xl relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 via-transparent to-purple-500/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-indigo-50/50 pointer-events-none" />
         <div className="relative z-10">
-          <h1 className="text-3xl font-light text-gradient-gold mb-1">
+          <h1 className="text-3xl font-light bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
             Professor Carl
           </h1>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-slate-600">
             Your Socratic AI Tutor • Discover through questions
           </p>
           {lessonContext && (
@@ -266,11 +266,11 @@ export function ChatInterface() {
               transition={{ delay: 0.3 }}
               className="mt-4 flex items-center gap-2 text-xs"
             >
-              <div className="px-3 py-1.5 rounded-full glass-panel-light border border-[#D4AF37]/20">
-                <span className="text-[#D4AF37] font-medium">📚 {lessonContext.lessonTitle}</span>
+              <div className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                <span className="text-blue-700 font-medium">📚 {lessonContext.lessonTitle}</span>
               </div>
-              <div className="px-3 py-1.5 rounded-full glass-panel-light border border-white/10">
-                <span className="text-white/70">{lessonContext.materialTitle}</span>
+              <div className="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+                <span className="text-slate-700">{lessonContext.materialTitle}</span>
               </div>
             </motion.div>
           )}
@@ -278,7 +278,7 @@ export function ChatInterface() {
       </motion.div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6 hide-scrollbar luxury-scrollbar">
+      <div className="flex-1 overflow-y-auto px-6 pb-6 hide-scrollbar">
         {messages.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -286,9 +286,9 @@ export function ChatInterface() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="flex items-center justify-center h-full"
           >
-            <div className="glass-panel-light p-8 rounded-2xl max-w-md text-center">
+            <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-2xl max-w-md text-center">
               <div className="text-5xl mb-4">🎓</div>
-              <p className="text-white/70 text-lg leading-relaxed">
+              <p className="text-slate-600 text-lg leading-relaxed">
                 Ask me anything! I'll guide you to the answer through thoughtful questions.
               </p>
             </div>
@@ -320,13 +320,13 @@ export function ChatInterface() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="glass-panel-light hover:glass-hover h-8 w-8"
+                    className="bg-white/50 hover:bg-white border border-slate-200 h-8 w-8 transition-colors"
                     onClick={() => isSpeaking ? stopSpeaking() : speakText(message.content)}
                   >
                     {isSpeaking ? (
-                      <VolumeX className="h-4 w-4 text-purple-400" />
+                      <VolumeX className="h-4 w-4 text-blue-600" />
                     ) : (
-                      <Volume2 className="h-4 w-4 text-white/60" />
+                      <Volume2 className="h-4 w-4 text-slate-600" />
                     )}
                   </Button>
                 </motion.div>
@@ -343,20 +343,20 @@ export function ChatInterface() {
             exit={{ opacity: 0 }}
             className="flex justify-start mb-6"
           >
-            <div className="glass-panel-heavy shadow-glow-purple p-5 rounded-2xl">
+            <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl">
               <div className="flex gap-2">
                 <motion.div
-                  className="w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"
+                  className="w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
                 />
                 <motion.div
-                  className="w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"
+                  className="w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
                 />
                 <motion.div
-                  className="w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"
+                  className="w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
                 />
@@ -373,9 +373,9 @@ export function ChatInterface() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="glass-panel-heavy m-6 p-6 relative overflow-hidden"
+        className="bg-white border border-slate-200 shadow-sm m-6 p-6 rounded-2xl relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-50/30 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10 flex gap-4">
           <div className="flex-1">
             <Textarea
@@ -383,7 +383,7 @@ export function ChatInterface() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type your question... or use the mic to speak"
-              className="resize-none glass-panel-light border-white/10 focus:border-[#D4AF37]/30 text-white placeholder:text-white/40 min-h-[60px] luxury-transition"
+              className="resize-none bg-slate-50 border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-slate-900 placeholder:text-slate-400 min-h-[60px] transition-all duration-200"
               rows={2}
             />
           </div>
@@ -393,10 +393,10 @@ export function ChatInterface() {
             <motion.div whileTap={{ scale: 0.95 }}>
               <Button
                 onClick={isRecording ? stopRecording : startRecording}
-                className={`h-[60px] w-[60px] luxury-transition ${
+                className={`h-[60px] w-[60px] transition-all duration-300 ${
                   isRecording
-                    ? 'bg-red-500/20 border-red-500/50 hover:bg-red-500/30 shadow-glow-purple'
-                    : 'glass-panel hover:glass-hover border-white/10'
+                    ? 'bg-blue-100 border-blue-400 hover:bg-blue-200 shadow-lg shadow-blue-200/50'
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
                 }`}
                 variant="outline"
               >
@@ -405,10 +405,10 @@ export function ChatInterface() {
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 1, repeat: Infinity }}
                   >
-                    <Square className="h-5 w-5 text-red-400" />
+                    <Square className="h-5 w-5 text-blue-600" />
                   </motion.div>
                 ) : (
-                  <Mic className="h-5 w-5 text-white/70" />
+                  <Mic className="h-5 w-5 text-slate-600" />
                 )}
               </Button>
             </motion.div>
@@ -418,15 +418,15 @@ export function ChatInterface() {
               <Button
                 onClick={handleSend}
                 disabled={isLoading || !input.trim()}
-                className={`h-[60px] w-[60px] luxury-transition ${
+                className={`h-[60px] w-[60px] transition-all duration-300 ${
                   !isLoading && input.trim()
-                    ? 'shadow-glow-gold bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/10 border-[#D4AF37]/30 hover:from-[#D4AF37]/30 hover:to-[#D4AF37]/20'
-                    : 'glass-panel-light border-white/10'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-600 hover:from-blue-700 hover:to-indigo-700 shadow-md'
+                    : 'bg-white border-slate-200'
                 }`}
                 variant="outline"
               >
                 <Send className={`h-5 w-5 ${
-                  !isLoading && input.trim() ? 'text-[#D4AF37]' : 'text-white/40'
+                  !isLoading && input.trim() ? 'text-white' : 'text-slate-400'
                 }`} />
               </Button>
             </motion.div>

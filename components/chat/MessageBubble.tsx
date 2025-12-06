@@ -26,10 +26,10 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
     >
       <div
         className={cn(
-          'relative max-w-[75%] p-5 rounded-2xl luxury-transition group',
+          'relative max-w-[75%] p-5 rounded-2xl transition-all duration-300 group',
           isUser
-            ? 'glass-panel-heavy shadow-glow-blue ml-12'
-            : 'glass-panel shadow-glow-purple mr-12'
+            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg ml-12'
+            : 'bg-white border border-slate-200 text-slate-900 shadow-sm hover:shadow-md mr-12'
         )}
       >
         {/* Elegant border highlight on hover */}
@@ -37,8 +37,8 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
           className={cn(
             'absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none',
             isUser
-              ? 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10'
-              : 'bg-gradient-to-br from-purple-500/10 to-pink-500/10'
+              ? 'bg-gradient-to-br from-blue-500/10 to-indigo-500/10'
+              : 'bg-gradient-to-br from-blue-50/50 to-indigo-50/50'
           )}
         />
 
@@ -50,30 +50,40 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
               className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center text-sm',
                 isUser
-                  ? 'glass-panel-light shadow-glow-blue'
-                  : 'glass-panel-light shadow-glow-purple'
+                  ? 'bg-white/20 backdrop-blur-sm'
+                  : 'bg-blue-50 border border-blue-100'
               )}
             >
               {isUser ? '👤' : '🎓'}
             </div>
-            <span className="text-xs font-medium text-white/50 uppercase tracking-wider">
+            <span
+              className={cn(
+                'text-xs font-medium uppercase tracking-wider',
+                isUser ? 'text-white/70' : 'text-slate-500'
+              )}
+            >
               {isUser ? 'You' : 'Professor Carl'}
             </span>
           </div>
 
           {/* Message text with improved typography */}
-          <p className="text-white leading-relaxed text-[15px] whitespace-pre-wrap">
+          <p
+            className={cn(
+              'leading-relaxed text-[15px] whitespace-pre-wrap',
+              isUser ? 'text-white' : 'text-slate-900'
+            )}
+          >
             {content}
           </p>
         </div>
 
-        {/* Subtle inner glow effect */}
+        {/* Subtle inner highlight effect */}
         <div
           className={cn(
             'absolute inset-0 rounded-2xl pointer-events-none',
             isUser
-              ? 'shadow-[inset_0_1px_0_rgba(59,130,246,0.1)]'
-              : 'shadow-[inset_0_1px_0_rgba(139,92,246,0.1)]'
+              ? 'shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]'
+              : 'shadow-[inset_0_1px_0_rgba(148,163,184,0.05)]'
           )}
         />
       </div>

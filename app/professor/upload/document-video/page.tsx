@@ -142,7 +142,7 @@ export default function DocumentVideoUploadPage() {
   }
 
   return (
-    <div className="min-h-screen aurora-bg p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -153,16 +153,16 @@ export default function DocumentVideoUploadPage() {
           <Button
             variant="ghost"
             onClick={() => router.back()}
-            className="glass-panel hover:glass-hover"
+            className="bg-white/80 backdrop-blur-xl border border-slate-200/50 hover:bg-white hover:border-slate-300"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-light text-gradient-gold">
+            <h1 className="text-3xl font-light text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
               Document + Video Upload
             </h1>
-            <p className="text-white/60">
+            <p className="text-slate-600">
               Upload your syllabus or lesson plan and link YouTube videos
             </p>
           </div>
@@ -174,12 +174,12 @@ export default function DocumentVideoUploadPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <Card className="glass-panel border-red-500/30 p-4">
+            <Card className="bg-red-50 border border-red-200 p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-red-400 font-medium">Error</p>
-                  <p className="text-white/70 text-sm mt-1">{error}</p>
+                  <p className="text-red-800 font-medium">Error</p>
+                  <p className="text-red-700 text-sm mt-1">{error}</p>
                 </div>
               </div>
             </Card>
@@ -188,16 +188,16 @@ export default function DocumentVideoUploadPage() {
 
         {!extractedData ? (
           /* Step 1: Upload Document */
-          <Card className="glass-panel p-8">
+          <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-8">
             <div className="text-center max-w-md mx-auto">
-              <div className="w-16 h-16 rounded-2xl glass-panel-light flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-8 h-8 text-[#D4AF37]" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <FileText className="w-8 h-8 text-white" />
               </div>
 
-              <h2 className="text-2xl font-light text-white mb-3">
+              <h2 className="text-2xl font-light text-slate-900 mb-3">
                 Upload Course Document
               </h2>
-              <p className="text-white/60 mb-8">
+              <p className="text-slate-600 mb-8">
                 Upload a PDF or DOCX containing your course syllabus, lesson plans, or curriculum outline.
                 Our AI will extract the course structure automatically.
               </p>
@@ -211,21 +211,21 @@ export default function DocumentVideoUploadPage() {
                     onChange={handleFileSelect}
                     className="hidden"
                   />
-                  <div className={`cursor-pointer glass-panel-light p-8 rounded-xl border-2 border-dashed transition-all duration-300 ${
+                  <div className={`cursor-pointer bg-white border-2 border-dashed p-8 rounded-xl transition-all duration-300 ${
                     documentFile
-                      ? 'border-[#D4AF37] bg-[#D4AF37]/5'
-                      : 'border-white/20 hover:border-white/40'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-blue-300 hover:border-blue-500 hover:bg-blue-50/50'
                   }`}>
                     {documentFile ? (
                       <div className="flex items-center justify-center gap-3">
-                        <Check className="w-5 h-5 text-[#D4AF37]" />
-                        <span className="text-white">{documentFile.name}</span>
+                        <Check className="w-5 h-5 text-blue-600" />
+                        <span className="text-slate-900">{documentFile.name}</span>
                       </div>
                     ) : (
                       <div>
-                        <Upload className="w-8 h-8 text-white/60 mx-auto mb-2" />
-                        <p className="text-white/80">Click to select file</p>
-                        <p className="text-white/40 text-sm mt-1">PDF or DOCX • Max 10MB</p>
+                        <Upload className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                        <p className="text-slate-700">Click to select file</p>
+                        <p className="text-slate-500 text-sm mt-1">PDF or DOCX • Max 10MB</p>
                       </div>
                     )}
                   </div>
@@ -236,11 +236,11 @@ export default function DocumentVideoUploadPage() {
               <Button
                 onClick={handleExtract}
                 disabled={!documentFile || extracting}
-                className="w-full glass-panel-heavy hover:glass-hover border-white/20 text-white py-6 h-auto shadow-glow-gold luxury-transition group"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-6 h-auto shadow-lg shadow-blue-500/30 transition-all duration-300 group border-0"
               >
                 {extracting ? (
                   <span className="flex items-center justify-center gap-3">
-                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Extracting Course Structure...
                   </span>
                 ) : (
@@ -252,11 +252,11 @@ export default function DocumentVideoUploadPage() {
               </Button>
 
               {/* Info */}
-              <div className="mt-8 text-left glass-panel-light p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-white mb-2">
+              <div className="mt-8 text-left bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-slate-900 mb-2">
                   💡 What AI Extracts:
                 </h4>
-                <ul className="space-y-1 text-sm text-white/60">
+                <ul className="space-y-1 text-sm text-slate-600">
                   <li>• Course title and description</li>
                   <li>• Lesson topics and sequence</li>
                   <li>• Learning objectives per lesson</li>
@@ -269,25 +269,25 @@ export default function DocumentVideoUploadPage() {
           /* Step 2: Review & Add Videos */
           <div className="space-y-6">
             {/* Course Info */}
-            <Card className="glass-panel p-6">
-              <h2 className="text-xl font-light text-white mb-4">Course Information</h2>
+            <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-6">
+              <h2 className="text-xl font-light text-slate-900 mb-4">Course Information</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-white/80 mb-2">Course Title</label>
+                  <label className="block text-sm text-slate-700 font-medium mb-2">Course Title</label>
                   <input
                     type="text"
                     value={extractedData.courseTitle}
                     onChange={(e) => setExtractedData({ ...extractedData, courseTitle: e.target.value })}
-                    className="w-full px-4 py-2 glass-panel-light text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                    className="w-full px-4 py-2 bg-white border border-slate-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-white/80 mb-2">Description</label>
+                  <label className="block text-sm text-slate-700 font-medium mb-2">Description</label>
                   <textarea
                     value={extractedData.courseDescription}
                     onChange={(e) => setExtractedData({ ...extractedData, courseDescription: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 glass-panel-light text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50 resize-none"
+                    className="w-full px-4 py-2 bg-white border border-slate-300 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all"
                   />
                 </div>
               </div>
@@ -295,26 +295,26 @@ export default function DocumentVideoUploadPage() {
 
             {/* Lessons */}
             <div className="space-y-4">
-              <h2 className="text-xl font-light text-white">Lessons ({extractedData.lessons.length})</h2>
+              <h2 className="text-xl font-light text-slate-900">Lessons ({extractedData.lessons.length})</h2>
               {extractedData.lessons.map((lesson, index) => (
-                <Card key={index} className="glass-panel p-6">
-                  <h3 className="text-lg font-light text-white mb-4">
+                <Card key={index} className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-6">
+                  <h3 className="text-lg font-light text-slate-900 mb-4">
                     Lesson {index + 1}: {lesson.title}
                   </h3>
 
                   {/* Objectives */}
                   <div className="mb-4">
-                    <label className="block text-sm text-white/80 mb-2">Learning Objectives</label>
+                    <label className="block text-sm text-slate-700 font-medium mb-2">Learning Objectives</label>
                     <div className="space-y-1">
                       {lesson.objectives.map((obj, i) => (
-                        <p key={i} className="text-white/60 text-sm">• {obj}</p>
+                        <p key={i} className="text-slate-600 text-sm">• {obj}</p>
                       ))}
                     </div>
                   </div>
 
                   {/* YouTube Link */}
                   <div>
-                    <label className="block text-sm text-white/80 mb-2">
+                    <label className="block text-sm text-slate-700 font-medium mb-2">
                       <Youtube className="w-4 h-4 inline mr-1" />
                       YouTube Video (Optional)
                     </label>
@@ -323,7 +323,7 @@ export default function DocumentVideoUploadPage() {
                       value={lesson.videoUrl}
                       onChange={(e) => updateLesson(index, 'videoUrl', e.target.value)}
                       placeholder="https://www.youtube.com/watch?v=..."
-                      className="w-full px-4 py-2 glass-panel-light text-white placeholder-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                      className="w-full px-4 py-2 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </Card>
@@ -335,14 +335,14 @@ export default function DocumentVideoUploadPage() {
               <Button
                 variant="outline"
                 onClick={() => setExtractedData(null)}
-                className="glass-panel hover:glass-hover border-white/20 text-white px-6 py-3"
+                className="bg-white/80 backdrop-blur-xl border border-slate-300 hover:bg-white hover:border-slate-400 text-slate-700 px-6 py-3"
               >
                 Start Over
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={saving || success}
-                className="glass-panel-heavy hover:glass-hover border-white/20 text-white px-10 py-6 h-auto shadow-glow-gold luxury-transition group"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-6 h-auto shadow-lg shadow-blue-500/30 transition-all duration-300 group border-0"
               >
                 {success ? (
                   <span className="flex items-center gap-3">
@@ -351,7 +351,7 @@ export default function DocumentVideoUploadPage() {
                   </span>
                 ) : saving ? (
                   <span className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Creating Course...
                   </span>
                 ) : (

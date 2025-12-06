@@ -179,7 +179,7 @@ export default function TopicBasedUploadPage() {
   }
 
   return (
-    <div className="min-h-screen aurora-bg p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -190,16 +190,16 @@ export default function TopicBasedUploadPage() {
           <Button
             variant="ghost"
             onClick={() => step === 1 ? router.back() : setStep(step - 1)}
-            className="glass-panel hover:glass-hover"
+            className="bg-white/80 backdrop-blur-xl border border-slate-200/50 hover:bg-white hover:border-slate-300"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-light text-gradient-gold">
+            <h1 className="text-3xl font-light text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
               Topic-Based Upload
             </h1>
-            <p className="text-white/60">
+            <p className="text-slate-600">
               Step {step} of 2: {step === 1 ? 'Course Details' : 'Lessons & Materials'}
             </p>
           </div>
@@ -214,13 +214,13 @@ export default function TopicBasedUploadPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <Card className="glass-panel p-8">
-                <h2 className="text-2xl font-light text-white mb-6">Course Information</h2>
+              <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-8">
+                <h2 className="text-2xl font-light text-slate-900 mb-6">Course Information</h2>
 
                 <div className="space-y-6">
                   {/* Course Title */}
                   <div>
-                    <label className="block text-sm text-white/80 mb-2">
+                    <label className="block text-sm text-slate-700 font-medium mb-2">
                       Course Title *
                     </label>
                     <input
@@ -228,13 +228,13 @@ export default function TopicBasedUploadPage() {
                       value={courseData.title}
                       onChange={(e) => setCourseData({ ...courseData, title: e.target.value })}
                       placeholder="e.g., Introduction to Psychology"
-                      className="w-full px-4 py-3 glass-panel text-white placeholder-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                      className="w-full px-4 py-3 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
 
                   {/* Course Description */}
                   <div>
-                    <label className="block text-sm text-white/80 mb-2">
+                    <label className="block text-sm text-slate-700 font-medium mb-2">
                       Course Description
                     </label>
                     <textarea
@@ -242,7 +242,7 @@ export default function TopicBasedUploadPage() {
                       onChange={(e) => setCourseData({ ...courseData, description: e.target.value })}
                       placeholder="Brief overview of what students will learn..."
                       rows={4}
-                      className="w-full px-4 py-3 glass-panel text-white placeholder-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50 resize-none"
+                      className="w-full px-4 py-3 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all"
                     />
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function TopicBasedUploadPage() {
                   <Button
                     onClick={() => setStep(2)}
                     disabled={!courseData.title.trim()}
-                    className="glass-panel-heavy hover:glass-hover border-white/20 text-white px-8 py-6 h-auto shadow-glow-gold luxury-transition group"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 h-auto shadow-lg shadow-blue-500/30 transition-all duration-300 group border-0"
                   >
                     <span className="flex items-center gap-3">
                       Next: Add Lessons
@@ -274,16 +274,16 @@ export default function TopicBasedUploadPage() {
             >
               {/* Lessons */}
               {courseData.lessons.map((lesson, lessonIndex) => (
-                <Card key={lesson.id} className="glass-panel p-6">
+                <Card key={lesson.id} className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-6">
                   <div className="flex items-start justify-between mb-6">
-                    <h3 className="text-xl font-light text-white">
+                    <h3 className="text-xl font-light text-slate-900">
                       Lesson {lessonIndex + 1}
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeLesson(lesson.id)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -291,7 +291,7 @@ export default function TopicBasedUploadPage() {
 
                   {/* Lesson Title */}
                   <div className="mb-4">
-                    <label className="block text-sm text-white/80 mb-2">
+                    <label className="block text-sm text-slate-700 font-medium mb-2">
                       Lesson Title *
                     </label>
                     <input
@@ -299,21 +299,21 @@ export default function TopicBasedUploadPage() {
                       value={lesson.title}
                       onChange={(e) => updateLesson(lesson.id, { title: e.target.value })}
                       placeholder="e.g., Introduction to Cognitive Psychology"
-                      className="w-full px-4 py-2 glass-panel-light text-white placeholder-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                      className="w-full px-4 py-2 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
 
                   {/* Learning Objectives */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm text-white/80">
+                      <label className="block text-sm text-slate-700 font-medium">
                         Learning Objectives
                       </label>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => addObjective(lesson.id)}
-                        className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                        className="text-blue-600 hover:bg-blue-50"
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         Add Objective
@@ -327,14 +327,14 @@ export default function TopicBasedUploadPage() {
                             value={objective}
                             onChange={(e) => updateObjective(lesson.id, objIndex, e.target.value)}
                             placeholder="Students will be able to..."
-                            className="flex-1 px-4 py-2 glass-panel-light text-white placeholder-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                            className="flex-1 px-4 py-2 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                           />
                           {lesson.objectives.length > 1 && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeObjective(lesson.id, objIndex)}
-                              className="text-white/60 hover:text-red-400"
+                              className="text-slate-500 hover:text-red-600"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -347,7 +347,7 @@ export default function TopicBasedUploadPage() {
                   {/* Materials */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <label className="block text-sm text-white/80">
+                      <label className="block text-sm text-slate-700 font-medium">
                         Materials
                       </label>
                       <div className="flex gap-2">
@@ -355,7 +355,7 @@ export default function TopicBasedUploadPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => addMaterial(lesson.id, 'video')}
-                          className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                          className="text-blue-600 hover:bg-blue-50"
                         >
                           <Youtube className="w-4 h-4 mr-1" />
                           Video
@@ -364,7 +364,7 @@ export default function TopicBasedUploadPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => addMaterial(lesson.id, 'document')}
-                          className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                          className="text-blue-600 hover:bg-blue-50"
                         >
                           <FileText className="w-4 h-4 mr-1" />
                           Document
@@ -373,7 +373,7 @@ export default function TopicBasedUploadPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => addMaterial(lesson.id, 'link')}
-                          className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                          className="text-blue-600 hover:bg-blue-50"
                         >
                           <LinkIcon className="w-4 h-4 mr-1" />
                           Link
@@ -385,15 +385,15 @@ export default function TopicBasedUploadPage() {
                       {lesson.materials.map((material) => {
                         const Icon = getMaterialIcon(material.type)
                         return (
-                          <div key={material.id} className="flex items-start gap-3 glass-panel-light p-4 rounded-lg">
-                            <Icon className="w-5 h-5 text-[#D4AF37] mt-2 flex-shrink-0" />
+                          <div key={material.id} className="flex items-start gap-3 bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                            <Icon className="w-5 h-5 text-blue-600 mt-2 flex-shrink-0" />
                             <div className="flex-1 space-y-2">
                               <input
                                 type="text"
                                 value={material.title}
                                 onChange={(e) => updateMaterial(lesson.id, material.id, { title: e.target.value })}
                                 placeholder="Material title"
-                                className="w-full px-3 py-1.5 bg-white/5 text-white placeholder-white/40 rounded focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                                className="w-full px-3 py-1.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                               />
                               <input
                                 type="text"
@@ -404,14 +404,14 @@ export default function TopicBasedUploadPage() {
                                   material.type === 'document' ? 'Document URL' :
                                   'Web link URL'
                                 }
-                                className="w-full px-3 py-1.5 bg-white/5 text-white placeholder-white/40 rounded focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+                                className="w-full px-3 py-1.5 bg-white border border-slate-300 text-slate-900 placeholder-slate-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                               />
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeMaterial(lesson.id, material.id)}
-                              className="text-white/60 hover:text-red-400 mt-1"
+                              className="text-slate-500 hover:text-red-600 mt-1"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -419,7 +419,7 @@ export default function TopicBasedUploadPage() {
                         )
                       })}
                       {lesson.materials.length === 0 && (
-                        <p className="text-white/40 text-sm text-center py-4">
+                        <p className="text-slate-400 text-sm text-center py-4">
                           No materials yet. Click the buttons above to add videos, documents, or links.
                         </p>
                       )}
@@ -432,7 +432,7 @@ export default function TopicBasedUploadPage() {
               <Button
                 onClick={addLesson}
                 variant="outline"
-                className="w-full glass-panel hover:glass-hover border-dashed border-2 border-white/20 text-white py-8 luxury-transition group"
+                className="w-full bg-white/80 backdrop-blur-xl border-2 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 text-slate-700 py-8 transition-all duration-300 group"
               >
                 <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                 Add Another Lesson
@@ -443,7 +443,7 @@ export default function TopicBasedUploadPage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={courseData.lessons.length === 0 || saving || success}
-                  className="glass-panel-heavy hover:glass-hover border-white/20 text-white px-10 py-6 h-auto shadow-glow-gold luxury-transition group"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-6 h-auto shadow-lg shadow-blue-500/30 transition-all duration-300 group border-0"
                 >
                   {success ? (
                     <span className="flex items-center gap-3">
@@ -452,7 +452,7 @@ export default function TopicBasedUploadPage() {
                     </span>
                   ) : saving ? (
                     <span className="flex items-center gap-3">
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Creating Course...
                     </span>
                   ) : (

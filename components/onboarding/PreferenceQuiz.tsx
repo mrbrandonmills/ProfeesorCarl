@@ -188,15 +188,15 @@ export function PreferenceQuiz() {
   // Show loading state while checking preferences
   if (loading) {
     return (
-      <div className="min-h-screen aurora-bg flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="glass-panel-heavy p-12 rounded-3xl"
+          className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-12 rounded-3xl"
         >
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#D4AF37] rounded-full animate-spin" />
-            <p className="text-white/60">Loading your preferences...</p>
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-slate-600">Loading your preferences...</p>
           </div>
         </motion.div>
       </div>
@@ -204,16 +204,16 @@ export function PreferenceQuiz() {
   }
 
   return (
-    <div className="min-h-screen aurora-bg flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-3xl"
       >
-        <Card className="glass-panel-heavy p-10 relative overflow-hidden">
+        <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg p-10 relative overflow-hidden">
           {/* Background gradient effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-purple-500/5 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-indigo-50/30 pointer-events-none" />
 
           {/* Header with back button */}
           <div className="relative z-10 flex items-center justify-between mb-8">
@@ -222,7 +222,7 @@ export function PreferenceQuiz() {
                 variant="ghost"
                 size="sm"
                 onClick={handleBack}
-                className="glass-panel-light hover:glass-hover"
+                className="bg-white/60 hover:bg-white/80 border border-slate-200/50 text-slate-700"
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Back
@@ -242,10 +242,10 @@ export function PreferenceQuiz() {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="relative z-10"
               >
-                <h2 className="text-4xl font-light mb-4 text-gradient-gold">
+                <h2 className="text-4xl font-light mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   How do you learn best?
                 </h2>
-                <p className="text-white/60 text-lg mb-10">
+                <p className="text-slate-600 text-lg mb-10">
                   Help us personalize your learning experience
                 </p>
 
@@ -259,8 +259,8 @@ export function PreferenceQuiz() {
                     >
                       <Button
                         variant="outline"
-                        className={`w-full h-auto glass-panel hover:glass-hover text-left justify-start p-6 luxury-transition group relative overflow-hidden ${
-                          selectedOption === option.id ? 'border-[#D4AF37] shadow-glow-gold' : ''
+                        className={`w-full h-auto bg-white/60 hover:bg-white/80 border border-slate-200/50 text-left justify-start p-6 luxury-transition group relative overflow-hidden ${
+                          selectedOption === option.id ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30 border-blue-500' : ''
                         }`}
                         onClick={() => handleNext(option.id)}
                       >
@@ -268,10 +268,14 @@ export function PreferenceQuiz() {
                         <div className="relative z-10 flex items-start gap-4 w-full">
                           <span className="text-4xl">{option.icon}</span>
                           <div className="flex-1">
-                            <div className="text-xl font-medium text-white mb-2">
+                            <div className={`text-xl font-medium mb-2 ${
+                              selectedOption === option.id ? 'text-white' : 'text-slate-900'
+                            }`}>
                               {option.title}
                             </div>
-                            <div className="text-sm text-white/60">
+                            <div className={`text-sm ${
+                              selectedOption === option.id ? 'text-white/90' : 'text-slate-600'
+                            }`}>
                               {option.description}
                             </div>
                           </div>
@@ -279,9 +283,9 @@ export function PreferenceQuiz() {
                             <motion.div
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              className="w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center"
+                              className="w-6 h-6 rounded-full bg-white flex items-center justify-center"
                             >
-                              <Check className="w-4 h-4 text-black" />
+                              <Check className="w-4 h-4 text-blue-600" />
                             </motion.div>
                           )}
                         </div>
@@ -302,10 +306,10 @@ export function PreferenceQuiz() {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="relative z-10"
               >
-                <h2 className="text-4xl font-light mb-4 text-gradient-gold">
+                <h2 className="text-4xl font-light mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   How would you like to interact?
                 </h2>
-                <p className="text-white/60 text-lg mb-10">
+                <p className="text-slate-600 text-lg mb-10">
                   Choose your preferred communication style
                 </p>
 
@@ -319,8 +323,8 @@ export function PreferenceQuiz() {
                     >
                       <Button
                         variant="outline"
-                        className={`w-full h-auto glass-panel hover:glass-hover text-left justify-start p-6 luxury-transition group relative overflow-hidden ${
-                          selectedOption === option.id ? 'border-[#D4AF37] shadow-glow-gold' : ''
+                        className={`w-full h-auto bg-white/60 hover:bg-white/80 border border-slate-200/50 text-left justify-start p-6 luxury-transition group relative overflow-hidden ${
+                          selectedOption === option.id ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30 border-blue-500' : ''
                         }`}
                         onClick={() => handleNext(option.id)}
                       >
@@ -328,10 +332,14 @@ export function PreferenceQuiz() {
                         <div className="relative z-10 flex items-start gap-4 w-full">
                           <span className="text-4xl">{option.icon}</span>
                           <div className="flex-1">
-                            <div className="text-xl font-medium text-white mb-2">
+                            <div className={`text-xl font-medium mb-2 ${
+                              selectedOption === option.id ? 'text-white' : 'text-slate-900'
+                            }`}>
                               {option.title}
                             </div>
-                            <div className="text-sm text-white/60">
+                            <div className={`text-sm ${
+                              selectedOption === option.id ? 'text-white/90' : 'text-slate-600'
+                            }`}>
                               {option.description}
                             </div>
                           </div>
@@ -339,9 +347,9 @@ export function PreferenceQuiz() {
                             <motion.div
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              className="w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center"
+                              className="w-6 h-6 rounded-full bg-white flex items-center justify-center"
                             >
-                              <Check className="w-4 h-4 text-black" />
+                              <Check className="w-4 h-4 text-blue-600" />
                             </motion.div>
                           )}
                         </div>
@@ -362,10 +370,10 @@ export function PreferenceQuiz() {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="relative z-10"
               >
-                <h2 className="text-4xl font-light mb-4 text-gradient-gold">
+                <h2 className="text-4xl font-light mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Choose Professor Carl's voice
                 </h2>
-                <p className="text-white/60 text-lg mb-10">
+                <p className="text-slate-600 text-lg mb-10">
                   Preview each voice and select your favorite
                 </p>
 
@@ -380,18 +388,18 @@ export function PreferenceQuiz() {
                     >
                       <Button
                         variant="outline"
-                        className="flex-1 h-auto glass-panel hover:glass-hover text-left justify-start p-6 luxury-transition group"
+                        className="flex-1 h-auto bg-white/60 hover:bg-white/80 border border-slate-200/50 text-left justify-start p-6 luxury-transition group"
                         onClick={() => handleComplete(voice.id)}
                       >
                         <div className="flex items-start gap-4 w-full">
-                          <div className="w-12 h-12 rounded-full glass-panel-light flex items-center justify-center text-xl group-hover:shadow-glow-gold transition-shadow duration-500">
+                          <div className="w-12 h-12 rounded-full bg-white/80 border border-slate-200/50 flex items-center justify-center text-xl group-hover:shadow-lg group-hover:shadow-blue-500/30 transition-shadow duration-500">
                             🎙️
                           </div>
                           <div className="flex-1">
-                            <div className="text-xl font-medium text-white mb-1">
+                            <div className="text-xl font-medium text-slate-900 mb-1">
                               {voice.name}
                             </div>
-                            <div className="text-sm text-white/60">
+                            <div className="text-sm text-slate-600">
                               {voice.description}
                             </div>
                           </div>
@@ -400,8 +408,8 @@ export function PreferenceQuiz() {
 
                       <Button
                         variant="outline"
-                        className={`h-auto px-6 glass-panel hover:glass-hover luxury-transition ${
-                          playingVoice === voice.id ? 'shadow-glow-purple' : ''
+                        className={`h-auto px-6 bg-white/60 hover:bg-white/80 border border-slate-200/50 luxury-transition ${
+                          playingVoice === voice.id ? 'shadow-lg shadow-blue-500/30 border-blue-500' : ''
                         }`}
                         onClick={(e) => {
                           e.stopPropagation()
@@ -410,7 +418,7 @@ export function PreferenceQuiz() {
                         disabled={playingVoice === voice.id}
                       >
                         <Play className={`w-5 h-5 ${
-                          playingVoice === voice.id ? 'text-purple-400' : 'text-white/80'
+                          playingVoice === voice.id ? 'text-blue-600' : 'text-slate-600'
                         }`} />
                       </Button>
                     </motion.div>
@@ -438,10 +446,10 @@ export function PreferenceQuiz() {
                 <div
                   className={`h-1.5 rounded-full transition-all duration-500 ${
                     i === step
-                      ? 'w-16 bg-gradient-to-r from-[#D4AF37] to-[#F7E7CE] shadow-glow-gold'
+                      ? 'w-16 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30'
                       : i < step
-                      ? 'w-16 bg-[#D4AF37]/50'
-                      : 'w-12 bg-white/10'
+                      ? 'w-16 bg-blue-400'
+                      : 'w-12 bg-slate-200'
                   }`}
                 />
               </motion.div>

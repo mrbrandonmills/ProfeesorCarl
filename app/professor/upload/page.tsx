@@ -23,7 +23,7 @@ export default function ProfessorUploadPage() {
         'Link videos and documents manually',
         'Full control over organization'
       ],
-      gradient: 'from-purple-500/20 to-blue-500/20',
+      gradient: 'from-blue-500/10 to-indigo-500/10',
     },
     {
       id: 'document-video' as const,
@@ -36,12 +36,12 @@ export default function ProfessorUploadPage() {
         'Add YouTube videos per lesson',
         'Automatic transcript extraction'
       ],
-      gradient: 'from-blue-500/20 to-cyan-500/20',
+      gradient: 'from-indigo-500/10 to-blue-500/10',
     },
   ]
 
   return (
-    <div className="min-h-screen aurora-bg p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -49,10 +49,10 @@ export default function ProfessorUploadPage() {
       >
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-light text-gradient-gold mb-3">
+          <h1 className="text-4xl font-light text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-3">
             Upload Course Content
           </h1>
-          <p className="text-white/60 text-lg">
+          <p className="text-slate-600 text-lg">
             Choose how you'd like to structure your course for Professor Carl
           </p>
         </div>
@@ -67,10 +67,10 @@ export default function ProfessorUploadPage() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Card
-                className={`glass-panel p-8 cursor-pointer luxury-transition group relative overflow-hidden ${
+                className={`bg-white/80 backdrop-blur-xl border p-8 cursor-pointer transition-all duration-300 group relative overflow-hidden ${
                   selectedMethod === method.id
-                    ? 'border-[#D4AF37] shadow-glow-gold'
-                    : 'hover:glass-hover'
+                    ? 'border-blue-500 shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/20'
+                    : 'border-slate-200/50 hover:border-blue-300 hover:shadow-lg'
                 }`}
                 onClick={() => setSelectedMethod(method.id)}
               >
@@ -82,25 +82,25 @@ export default function ProfessorUploadPage() {
                 {/* Content */}
                 <div className="relative z-10">
                   {/* Icon */}
-                  <div className="w-14 h-14 rounded-2xl glass-panel-light flex items-center justify-center mb-6 group-hover:shadow-glow-gold transition-shadow duration-500">
-                    <method.icon className="w-7 h-7 text-[#D4AF37]" />
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <method.icon className="w-7 h-7 text-white" />
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-2xl font-light text-white mb-3">
+                  <h3 className="text-2xl font-light text-slate-900 mb-3">
                     {method.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-white/60 mb-6">
+                  <p className="text-slate-600 mb-6">
                     {method.description}
                   </p>
 
                   {/* Features */}
                   <ul className="space-y-2">
                     {method.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-white/70">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 flex-shrink-0" />
+                      <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -111,9 +111,9 @@ export default function ProfessorUploadPage() {
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute top-6 right-6 w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center"
+                      className="absolute top-6 right-6 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg"
                     >
-                      <Upload className="w-4 h-4 text-black" />
+                      <Upload className="w-4 h-4 text-white" />
                     </motion.div>
                   )}
                 </div>
@@ -131,7 +131,7 @@ export default function ProfessorUploadPage() {
           >
             <Button
               size="lg"
-              className="glass-panel-heavy hover:glass-hover border-white/20 text-white text-lg px-10 py-6 h-auto shadow-glow-gold luxury-transition group"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg px-10 py-6 h-auto shadow-lg shadow-blue-500/30 transition-all duration-300 group border-0"
               onClick={() => {
                 window.location.href = `/professor/upload/${selectedMethod}`
               }}
@@ -151,11 +151,11 @@ export default function ProfessorUploadPage() {
           transition={{ delay: 0.4 }}
           className="mt-12"
         >
-          <Card className="glass-panel-light p-6">
-            <h4 className="text-lg font-medium text-white mb-3">
+          <Card className="bg-white/60 backdrop-blur-xl border border-slate-200/50 p-6">
+            <h4 className="text-lg font-medium text-slate-900 mb-3">
               💡 About Course Upload
             </h4>
-            <div className="text-white/60 space-y-2 text-sm">
+            <div className="text-slate-600 space-y-2 text-sm">
               <p>
                 • <strong>Topic-Based:</strong> Best for structured courses where you want precise control over lesson organization
               </p>
