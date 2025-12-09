@@ -92,7 +92,7 @@ IMPORTANT: Match your teaching style to the ${personality} personality.`
   ]
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-opus-4-20250514',
     max_tokens: 500,
     system: systemPrompt,
     messages,
