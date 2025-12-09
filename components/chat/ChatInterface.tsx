@@ -32,7 +32,7 @@ export function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
-  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const speechSynthRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     // Check for lesson context in sessionStorage
@@ -78,41 +78,62 @@ export function ChatInterface() {
     scrollToBottom()
   }, [messages])
 
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
+  const speakText = async (text: string) => {
+    try {
+      // Stop any currently playing audio
+      stopSpeaking()
 
-      const utterance = new SpeechSynthesisUtterance(text)
       const preferences = JSON.parse(localStorage.getItem('preferences') || '{}')
-      const voices = window.speechSynthesis.getVoices()
+      const selectedVoice = preferences.selected_voice || 'alloy'
 
-      const voiceMap: Record<string, string> = {
-        'alloy': 'Google US English',
-        'echo': 'Alex',
-        'nova': 'Samantha'
+      setIsSpeaking(true)
+
+      // Call OpenAI TTS API
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: text,
+          voice: selectedVoice,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate speech')
       }
 
-      const selectedVoiceName = voiceMap[preferences.selected_voice] || 'Google US English'
-      const voice = voices.find(v => v.name.includes(selectedVoiceName))
+      // Play the audio
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio(audioUrl)
 
-      if (voice) {
-        utterance.voice = voice
+      audio.onended = () => {
+        setIsSpeaking(false)
+        URL.revokeObjectURL(audioUrl)
       }
 
-      utterance.rate = 0.9
-      utterance.pitch = 1.0
+      audio.onerror = () => {
+        setIsSpeaking(false)
+        URL.revokeObjectURL(audioUrl)
+      }
 
-      utterance.onstart = () => setIsSpeaking(true)
-      utterance.onend = () => setIsSpeaking(false)
+      // Store reference to current audio for stopping
+      speechSynthRef.current = audio as any
 
-      speechSynthRef.current = utterance
-      window.speechSynthesis.speak(utterance)
+      await audio.play()
+    } catch (error) {
+      console.error('Error speaking text:', error)
+      setIsSpeaking(false)
     }
   }
 
   const stopSpeaking = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
+    if (speechSynthRef.current) {
+      const audio = speechSynthRef.current as any
+      if (audio.pause) {
+        audio.pause()
+        audio.currentTime = 0
+      }
       setIsSpeaking(false)
     }
   }

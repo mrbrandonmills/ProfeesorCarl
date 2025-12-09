@@ -7,9 +7,12 @@ import { Card } from '@/components/ui/card'
 import { Play, Check, ChevronLeft } from 'lucide-react'
 
 const VOICES = [
-  { id: 'alloy', name: 'Alloy', description: 'Warm and friendly', voiceName: 'Google US English' },
-  { id: 'echo', name: 'Echo', description: 'Clear and professional', voiceName: 'Alex' },
-  { id: 'nova', name: 'Nova', description: 'Energetic and engaging', voiceName: 'Samantha' },
+  { id: 'alloy', name: 'Alloy', description: 'Warm and balanced - HD quality' },
+  { id: 'echo', name: 'Echo', description: 'Clear and articulate - HD quality' },
+  { id: 'fable', name: 'Fable', description: 'Expressive and storytelling - HD quality' },
+  { id: 'onyx', name: 'Onyx', description: 'Deep and authoritative - HD quality' },
+  { id: 'nova', name: 'Nova', description: 'Energetic and youthful - HD quality' },
+  { id: 'shimmer', name: 'Shimmer', description: 'Bright and enthusiastic - HD quality' },
 ]
 
 const VOICE_PREVIEW_TEXT = "Hi! I'm Professor Carl. I help students learn through guided questions and discovery."
@@ -120,25 +123,43 @@ export function PreferenceQuiz() {
     loadPreferences()
   }, [])
 
-  const previewVoice = (voiceName: string, voiceId: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
+  const previewVoice = async (voiceId: string) => {
+    try {
+      setPlayingVoice(voiceId)
 
-      const utterance = new SpeechSynthesisUtterance(VOICE_PREVIEW_TEXT)
-      const voices = window.speechSynthesis.getVoices()
-      const voice = voices.find(v => v.name.includes(voiceName))
+      // Call OpenAI TTS API
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: VOICE_PREVIEW_TEXT,
+          voice: voiceId,
+        }),
+      })
 
-      if (voice) {
-        utterance.voice = voice
+      if (!response.ok) {
+        throw new Error('Failed to generate speech')
       }
 
-      utterance.rate = 0.9
-      utterance.pitch = 1.0
+      // Play the audio
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio(audioUrl)
 
-      utterance.onstart = () => setPlayingVoice(voiceId)
-      utterance.onend = () => setPlayingVoice(null)
+      audio.onended = () => {
+        setPlayingVoice(null)
+        URL.revokeObjectURL(audioUrl)
+      }
 
-      window.speechSynthesis.speak(utterance)
+      audio.onerror = () => {
+        setPlayingVoice(null)
+        URL.revokeObjectURL(audioUrl)
+      }
+
+      await audio.play()
+    } catch (error) {
+      console.error('Error playing voice preview:', error)
+      setPlayingVoice(null)
     }
   }
 
@@ -413,7 +434,7 @@ export function PreferenceQuiz() {
                         }`}
                         onClick={(e) => {
                           e.stopPropagation()
-                          previewVoice(voice.voiceName, voice.id)
+                          previewVoice(voice.id)
                         }}
                         disabled={playingVoice === voice.id}
                       >

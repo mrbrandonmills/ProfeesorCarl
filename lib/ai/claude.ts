@@ -25,9 +25,12 @@ export async function generateSocraticResponse(
 ): Promise<string> {
   // Determine voice personality
   const voicePersonalities = {
-    alloy: 'warm, friendly, and encouraging',
-    echo: 'clear, professional, and precise',
-    nova: 'energetic, enthusiastic, and engaging',
+    alloy: 'warm, balanced, and encouraging',
+    echo: 'clear, articulate, and professional',
+    fable: 'expressive, storytelling, and engaging',
+    onyx: 'deep, authoritative, and confident',
+    nova: 'energetic, youthful, and enthusiastic',
+    shimmer: 'bright, enthusiastic, and uplifting',
   }
 
   const personality = context.voiceStyle && voicePersonalities[context.voiceStyle as keyof typeof voicePersonalities]
