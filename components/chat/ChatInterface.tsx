@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageBubble } from './MessageBubble'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Send, Mic, Square, Volume2, VolumeX } from 'lucide-react'
+import { Send, Mic, Square, Volume2, VolumeX, Settings, ChevronDown } from 'lucide-react'
 
 interface Message {
   id: string
@@ -21,6 +21,26 @@ interface LessonContext {
   materialType: string
 }
 
+interface DemoContext {
+  isDemo: boolean
+  presentationMode?: boolean
+  userName?: string
+  userRole?: string
+  institution?: string
+  presentationContext?: string
+  specialInstructions?: string[]
+  sampleTopics?: string[]
+}
+
+const VOICES = [
+  { id: 'alloy', name: 'Alloy', description: 'Warm and balanced' },
+  { id: 'echo', name: 'Echo', description: 'Clear and articulate' },
+  { id: 'fable', name: 'Fable', description: 'Expressive storytelling' },
+  { id: 'onyx', name: 'Onyx', description: 'Deep and authoritative' },
+  { id: 'nova', name: 'Nova', description: 'Energetic and youthful' },
+  { id: 'shimmer', name: 'Shimmer', description: 'Bright and enthusiastic' },
+]
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -29,12 +49,29 @@ export function ChatInterface() {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [sessionId, setSessionId] = useState<string>('')
   const [lessonContext, setLessonContext] = useState<LessonContext | null>(null)
+  const [demoContext, setDemoContext] = useState<DemoContext | null>(null)
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false)
+  const [selectedVoice, setSelectedVoice] = useState('alloy')
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0)
+  const [autoSpeak, setAutoSpeak] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const speechSynthRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
+    // Check for demo context in sessionStorage
+    const storedDemoContext = sessionStorage.getItem('demoContext')
+    if (storedDemoContext) {
+      try {
+        const demo = JSON.parse(storedDemoContext)
+        setDemoContext(demo)
+        console.log('🎓 Demo mode activated:', demo.userName)
+      } catch (error) {
+        console.error('Failed to parse demo context:', error)
+      }
+    }
+
     // Check for lesson context in sessionStorage
     const storedContext = sessionStorage.getItem('lessonContext')
     if (storedContext) {
@@ -46,6 +83,15 @@ export function ChatInterface() {
       }
     }
 
+    // Load preferences from localStorage
+    const preferences = JSON.parse(localStorage.getItem('preferences') || '{}')
+    if (preferences.selected_voice) {
+      setSelectedVoice(preferences.selected_voice)
+    }
+    if (preferences.interaction_mode !== 'text') {
+      setAutoSpeak(true)
+    }
+
     // Initialize session
     const initSession = async () => {
       try {
@@ -53,16 +99,40 @@ export function ChatInterface() {
         const data = await response.json()
         setSessionId(data.sessionId)
 
-        // Add context-aware greeting message
-        const greetingMessage = storedContext
-          ? `Hi! I'm Professor Carl. I see you're working on "${JSON.parse(storedContext).materialTitle}" from the lesson "${JSON.parse(storedContext).lessonTitle}". I'll guide you through understanding this material using questions. What would you like to explore?`
-          : "Hi! I'm Professor Carl. I don't give direct answers - instead, I'll guide you to discover insights through questions. What would you like to explore today?"
+        // Generate context-aware greeting message
+        let greetingMessage: string
+
+        // Check if demo mode
+        const demoCtx = storedDemoContext ? JSON.parse(storedDemoContext) : null
+
+        if (demoCtx?.isDemo) {
+          greetingMessage = `Welcome, ${demoCtx.userName || 'Brandon'}! 🎓
+
+I'm Professor Carl, ready for the ${demoCtx.institution || 'UCSD'} demonstration. I'm here to showcase how AI can enhance learning through the Socratic method.
+
+What would you like to explore? You can:
+• Ask me to demonstrate my teaching approach
+• Say "tell them about our work" for an overview
+• Pick any topic and I'll guide you through it with questions
+
+I'm ready when you are!`
+        } else if (storedContext) {
+          const ctx = JSON.parse(storedContext)
+          greetingMessage = `Hi! I'm Professor Carl. I see you're working on "${ctx.materialTitle}" from the lesson "${ctx.lessonTitle}". I'll guide you through understanding this material using questions. What would you like to explore?`
+        } else {
+          greetingMessage = "Hi! I'm Professor Carl. I don't give direct answers - instead, I'll guide you to discover insights through questions. What would you like to explore today?"
+        }
 
         setMessages([{
           id: '1',
           role: 'assistant',
           content: greetingMessage
         }])
+
+        // Auto-speak greeting in demo mode
+        if (demoCtx?.isDemo && preferences.interaction_mode !== 'text') {
+          setTimeout(() => speakText(greetingMessage), 500)
+        }
       } catch (error) {
         console.error('Failed to initialize session:', error)
       }
@@ -83,18 +153,16 @@ export function ChatInterface() {
       // Stop any currently playing audio
       stopSpeaking()
 
-      const preferences = JSON.parse(localStorage.getItem('preferences') || '{}')
-      const selectedVoice = preferences.selected_voice || 'alloy'
-
       setIsSpeaking(true)
 
-      // Call OpenAI TTS API
+      // Call OpenAI TTS API with speed
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
           voice: selectedVoice,
+          speed: voiceSpeed,
         }),
       })
 
@@ -138,6 +206,18 @@ export function ChatInterface() {
     }
   }
 
+  const handleVoiceChange = (voiceId: string) => {
+    setSelectedVoice(voiceId)
+    // Save to localStorage
+    const preferences = JSON.parse(localStorage.getItem('preferences') || '{}')
+    preferences.selected_voice = voiceId
+    localStorage.setItem('preferences', JSON.stringify(preferences))
+  }
+
+  const handleSpeedChange = (speed: number) => {
+    setVoiceSpeed(speed)
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading || !sessionId) return
 
@@ -152,18 +232,15 @@ export function ChatInterface() {
     setIsLoading(true)
 
     try {
-      // Get voice preference from localStorage
-      const preferences = JSON.parse(localStorage.getItem('preferences') || '{}')
-      const voiceStyle = preferences.selected_voice || 'alloy'
-
       const response = await fetch('/api/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input,
           sessionId,
-          voiceStyle,
-          lessonContext: lessonContext // Pass lesson context to API
+          voiceStyle: selectedVoice,
+          lessonContext: lessonContext,
+          demoContext: demoContext, // Pass demo context to API
         })
       })
 
@@ -181,8 +258,8 @@ export function ChatInterface() {
 
       setMessages(prev => [...prev, assistantMessage])
 
-      // Use voice preferences already retrieved above
-      if (preferences.interaction_mode !== 'text') {
+      // Auto-speak if enabled
+      if (autoSpeak) {
         speakText(data.response)
       }
     } catch (error) {
@@ -273,29 +350,147 @@ export function ChatInterface() {
         className="bg-white border border-slate-200 shadow-sm m-6 p-6 rounded-2xl relative overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-indigo-50/50 pointer-events-none" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-light bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
-            Professor Carl
-          </h1>
-          <p className="text-sm text-slate-600">
-            Your Socratic AI Tutor • Discover through questions
-          </p>
-          {lessonContext && (
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-3xl font-light bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Professor Carl
+              </h1>
+              {demoContext?.isDemo && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="px-3 py-1 text-xs font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-lg shadow-amber-500/30"
+                >
+                  DEMO MODE
+                </motion.span>
+              )}
+            </div>
+            <p className="text-sm text-slate-600">
+              {demoContext?.isDemo
+                ? `${demoContext.institution} Presentation • ${demoContext.userName}`
+                : 'Your Socratic AI Tutor • Discover through questions'
+              }
+            </p>
+            {lessonContext && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4 flex items-center gap-2 text-xs"
+              >
+                <div className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                  <span className="text-blue-700 font-medium">📚 {lessonContext.lessonTitle}</span>
+                </div>
+                <div className="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+                  <span className="text-slate-700">{lessonContext.materialTitle}</span>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Voice Settings Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+            className="bg-white/60 hover:bg-white border-slate-200"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Voice
+            <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${showVoiceSettings ? 'rotate-180' : ''}`} />
+          </Button>
+        </div>
+
+        {/* Voice Settings Panel */}
+        <AnimatePresence>
+          {showVoiceSettings && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-4 flex items-center gap-2 text-xs"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-4 pt-4 border-t border-slate-200"
             >
-              <div className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-                <span className="text-blue-700 font-medium">📚 {lessonContext.lessonTitle}</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Voice Selection */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-2">Voice</label>
+                  <select
+                    value={selectedVoice}
+                    onChange={(e) => handleVoiceChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  >
+                    {VOICES.map((voice) => (
+                      <option key={voice.id} value={voice.id}>
+                        {voice.name} - {voice.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Speed Control */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-2">
+                    Speed: {voiceSpeed.toFixed(1)}x
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.0"
+                    step="0.1"
+                    value={voiceSpeed}
+                    onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                    className="w-full accent-blue-600"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>0.5x</span>
+                    <span>1.0x</span>
+                    <span>2.0x</span>
+                  </div>
+                </div>
+
+                {/* Auto-speak Toggle */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-2">Auto-speak</label>
+                  <button
+                    onClick={() => setAutoSpeak(!autoSpeak)}
+                    className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      autoSpeak
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {autoSpeak ? '🔊 On' : '🔇 Off'}
+                  </button>
+                </div>
               </div>
-              <div className="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
-                <span className="text-slate-700">{lessonContext.materialTitle}</span>
+
+              {/* Test Voice Button */}
+              <div className="mt-4 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => speakText("Hello! This is how I'll sound during our conversation.")}
+                  disabled={isSpeaking}
+                  className="bg-white/60 hover:bg-white"
+                >
+                  {isSpeaking ? (
+                    <>
+                      <VolumeX className="w-4 h-4 mr-2" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-4 h-4 mr-2" />
+                      Test Voice
+                    </>
+                  )}
+                </Button>
               </div>
             </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </motion.div>
 
       {/* Messages Container */}
@@ -310,7 +505,10 @@ export function ChatInterface() {
             <div className="bg-white border border-slate-200 shadow-sm p-8 rounded-2xl max-w-md text-center">
               <div className="text-5xl mb-4">🎓</div>
               <p className="text-slate-600 text-lg leading-relaxed">
-                Ask me anything! I'll guide you to the answer through thoughtful questions.
+                {demoContext?.isDemo
+                  ? "Ready for the UCSD demonstration! Ask me anything."
+                  : "Ask me anything! I'll guide you to the answer through thoughtful questions."
+                }
               </p>
             </div>
           </motion.div>
@@ -335,13 +533,13 @@ export function ChatInterface() {
               {message.role === 'assistant' && (
                 <motion.div
                   initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
                   className="absolute top-4 right-4"
                 >
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="bg-white/50 hover:bg-white border border-slate-200 h-8 w-8 transition-colors"
+                    className="bg-white/80 hover:bg-white border border-slate-200 h-8 w-8 transition-colors shadow-sm"
                     onClick={() => isSpeaking ? stopSpeaking() : speakText(message.content)}
                   >
                     {isSpeaking ? (
@@ -403,7 +601,10 @@ export function ChatInterface() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Type your question... or use the mic to speak"
+              placeholder={demoContext?.isDemo
+                ? "Try: 'tell them about our work' or ask about any topic..."
+                : "Type your question... or use the mic to speak"
+              }
               className="resize-none bg-slate-50 border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-slate-900 placeholder:text-slate-400 min-h-[60px] transition-all duration-200"
               rows={2}
             />

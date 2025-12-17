@@ -2,25 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { signToken } from '@/lib/auth/jwt'
 
-// Mock users for demo purposes
-const MOCK_USERS = {
+// Default mock users for demo purposes
+const DEFAULT_USERS = {
   professor: {
-    canvas_id: 'prof_demo_001',
     name: 'Dr. Sarah Chen',
     email: 'professor@university.edu',
-    role: 'teacher' as const,
   },
   student: {
-    canvas_id: 'student_demo_001',
     name: 'Alex Martinez',
     email: 'student@university.edu',
-    role: 'student' as const,
   },
+}
+
+// Generate a canvas_id from email (for unique identification)
+function generateCanvasId(email: string): string {
+  return `demo_${email.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
+}
+
+// Extract a display name from email if no name provided
+function extractNameFromEmail(email: string): string {
+  const localPart = email.split('@')[0]
+  return localPart
+    .replace(/[._-]/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, role } = await request.json()
+    const { email, password, role, name: providedName } = await request.json()
 
     // In demo mode, any password works
     if (!email || !role) {
@@ -30,14 +39,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get or create mock user
-    const mockUser = role === 'professor' ? MOCK_USERS.professor : MOCK_USERS.student
+    // Determine user details - use provided name, or defaults, or extract from email
+    const isDefaultProfessor = email === DEFAULT_USERS.professor.email
+    const isDefaultStudent = email === DEFAULT_USERS.student.email
+
+    let userName: string
+    if (providedName) {
+      userName = providedName
+    } else if (isDefaultProfessor) {
+      userName = DEFAULT_USERS.professor.name
+    } else if (isDefaultStudent) {
+      userName = DEFAULT_USERS.student.name
+    } else {
+      userName = extractNameFromEmail(email)
+    }
+
+    const canvasId = generateCanvasId(email)
+    const userRole = role === 'professor' ? 'teacher' : 'student'
 
     // Check if user exists in database
     let { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('canvas_id', mockUser.canvas_id)
+      .eq('canvas_id', canvasId)
       .single()
 
     // Create user if doesn't exist
@@ -45,10 +69,10 @@ export async function POST(request: NextRequest) {
       const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
         .insert({
-          canvas_id: mockUser.canvas_id,
-          name: mockUser.name,
-          email: mockUser.email,
-          role: mockUser.role,
+          canvas_id: canvasId,
+          name: userName,
+          email: email,
+          role: userRole,
         })
         .select()
         .single()

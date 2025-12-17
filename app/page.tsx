@@ -18,12 +18,12 @@ export default function Home() {
             </div>
             <span className="text-slate-900 font-bold text-xl">Professor Carl</span>
           </div>
-          <div className="flex items-center gap-8">
-            <button className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
-              Features
-            </button>
-            <button className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
-              Pricing
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/demo')}
+              className="px-6 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-all"
+            >
+              Try Demo
             </button>
             <button
               onClick={() => router.push('/login')}
@@ -66,41 +66,35 @@ export default function Home() {
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => router.push('/catalog')}
+                  onClick={() => router.push('/demo')}
                   className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 flex items-center justify-center gap-2"
                 >
-                  Start Learning Free
+                  Try Demo
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
 
                 <button
-                  onClick={() => router.push('/catalog')}
+                  onClick={() => router.push('/demo')}
                   className="px-8 py-4 rounded-2xl bg-white border-2 border-slate-200 text-slate-900 font-bold text-lg hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
                 >
                   <Play className="w-5 h-5" />
-                  Watch Demo
+                  UCSD Demo
                 </button>
               </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-12 mt-12">
-                <div>
-                  <div className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    500+
-                  </div>
-                  <div className="text-sm text-slate-500 font-medium">Courses</div>
+              {/* Capabilities */}
+              <div className="flex items-center gap-8 mt-12 flex-wrap">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="text-sm font-medium">Real-time Voice AI</span>
                 </div>
-                <div>
-                  <div className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    10K+
-                  </div>
-                  <div className="text-sm text-slate-500 font-medium">Students</div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span className="text-sm font-medium">Emotional Awareness</span>
                 </div>
-                <div>
-                  <div className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    95%
-                  </div>
-                  <div className="text-sm text-slate-500 font-medium">Success Rate</div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span className="text-sm font-medium">Socratic Method</span>
                 </div>
               </div>
             </div>
@@ -211,18 +205,18 @@ export default function Home() {
             Your Learning?
           </h2>
           <p className="text-2xl text-white/90 mb-12 font-medium">
-            Join thousands of students already learning smarter
+            Experience the future of AI-powered education
           </p>
 
           <button
-            onClick={() => router.push('/catalog')}
+            onClick={() => router.push('/demo')}
             className="px-12 py-5 rounded-2xl bg-white text-slate-900 font-black text-xl shadow-2xl hover:shadow-white/40 transition-all hover:scale-105 inline-flex items-center gap-3"
           >
-            Get Started for Free
+            Try the Demo
             <ArrowRight className="w-6 h-6" />
           </button>
 
-          <p className="text-white/80 mt-8 text-lg">No credit card required • 14-day free trial</p>
+          <p className="text-white/80 mt-8 text-lg">Powered by Hume EVI + Claude AI</p>
         </div>
       </section>
 

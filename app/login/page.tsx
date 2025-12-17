@@ -56,6 +56,35 @@ export default function LoginPage() {
     }
   }
 
+  // Demo persona quick login
+  const handlePersonaLogin = async (persona: { name: string; email: string; role: 'professor' | 'student' }) => {
+    try {
+      const response = await fetch('/api/auth/mock-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: persona.email,
+          password: 'demo',
+          role: persona.role,
+          name: persona.name,
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        router.push(persona.role === 'professor' ? '/dashboard' : '/onboarding')
+      }
+    } catch (error) {
+      console.error('Persona login error:', error)
+    }
+  }
+
+  const DEMO_PERSONAS = [
+    { name: 'Jesse', email: 'jesse@demo.edu', role: 'student' as const },
+    { name: 'Brandon', email: 'brandon@demo.edu', role: 'student' as const },
+  ]
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
       <motion.div
@@ -201,7 +230,7 @@ export default function LoginPage() {
           <h3 className="text-center text-sm font-medium text-slate-700 mb-4">
             Quick Testing Access
           </h3>
-          <div className="flex gap-3">
+          <div className="flex gap-3 mb-4">
             <Button
               onClick={() => handleQuickAccess('professor')}
               variant="outline"
@@ -216,6 +245,24 @@ export default function LoginPage() {
             >
               Login as Student
             </Button>
+          </div>
+
+          {/* Demo Personas */}
+          <div className="pt-4 border-t border-slate-200/50">
+            <p className="text-xs text-slate-500 text-center mb-3">Demo Personas</p>
+            <div className="flex gap-2 justify-center">
+              {DEMO_PERSONAS.map((persona) => (
+                <Button
+                  key={persona.email}
+                  onClick={() => handlePersonaLogin(persona)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  {persona.name}
+                </Button>
+              ))}
+            </div>
           </div>
         </motion.div>
 

@@ -7,7 +7,7 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice } = await request.json()
+    const { text, voice, speed } = await request.json()
 
     if (!text) {
       return NextResponse.json(
@@ -20,12 +20,15 @@ export async function POST(request: NextRequest) {
     const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
     const selectedVoice = validVoices.includes(voice) ? voice : 'alloy'
 
+    // Validate speed (0.25 to 4.0, default 1.0)
+    const selectedSpeed = typeof speed === 'number' && speed >= 0.25 && speed <= 4.0 ? speed : 1.0
+
     // Generate speech using OpenAI TTS HD
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1-hd',
       voice: selectedVoice,
       input: text,
-      speed: 1.0,
+      speed: selectedSpeed,
     })
 
     // Convert to buffer
