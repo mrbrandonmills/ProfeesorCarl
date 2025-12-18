@@ -215,7 +215,7 @@ function VoicePageContent() {
         >
           <span className="text-white font-semibold">UCSD Faculty Demo</span>
           <span className="mx-2 text-white/60">•</span>
-          <span className="text-white/90">Real-time voice + emotional awareness powered by Hume EVI & Claude OPUS 4.5</span>
+          <span className="text-white/90">Real-time voice + emotional awareness powered by Hume EVI & Claude</span>
         </footer>
       )}
     </div>

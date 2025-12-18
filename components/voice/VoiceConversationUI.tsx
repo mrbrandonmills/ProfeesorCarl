@@ -43,9 +43,9 @@ interface EmotionData {
   isBreakthrough: boolean // High engagement + joy + surprise = insight moment
 }
 
-// Professor Carl OPUS 4.5 Config (ID: 2419516a-3ff2-490f-b9a7-28499b5923c8)
-// Model: claude-opus-4-5-20251101 | Temperature: 0.5 | Voice: Articulate ASMR British Narrator
-// Includes: Brandon's full learning profile, UCSD demo context, Socratic method
+// Professor Carl Config - Claude Sonnet 4 (Hume's best available Anthropic model)
+// Config ID: 52b75fbf-732c-48fe-af7e-5aae177e8136 (your original working config)
+// Hume does NOT support Opus - only claude-sonnet-4-20250514
 
 // Inner component that uses the voice hooks
 function VoiceConversationInner({
@@ -95,11 +95,11 @@ function VoiceConversationInner({
   const emotionHistoryRef = useRef<EmotionData[]>([])
   const startTimeRef = useRef<number>(0)
 
-  // Professor Carl OPUS 4.5 config with British ASMR voice
+  // Professor Carl config with British voice - Sonnet 4 (Hume's best available)
   useEffect(() => {
-    // OPUS 4.5 + British ASMR voice + Brandon profile + UCSD shoutouts + temp 0.5
-    const PROFESSOR_CARL_CONFIG_ID = '2419516a-3ff2-490f-b9a7-28499b5923c8'
-    console.log('[Voice] Using Professor Carl OPUS 4.5 config:', PROFESSOR_CARL_CONFIG_ID)
+    // Your original working config from Hume dashboard
+    const PROFESSOR_CARL_CONFIG_ID = '52b75fbf-732c-48fe-af7e-5aae177e8136'
+    console.log('[Voice] Using Professor Carl config:', PROFESSOR_CARL_CONFIG_ID)
     setConfigId(PROFESSOR_CARL_CONFIG_ID)
     setConfigLoading(false)
   }, [])
@@ -649,7 +649,7 @@ function VoiceConversationInner({
                 color: '#22c55e',
               }}
             >
-              ✓ Professor Carl OPUS 4.5 configured (British ASMR voice)
+              ✓ Professor Carl configured (British voice)
             </motion.p>
           )}
         </div>
