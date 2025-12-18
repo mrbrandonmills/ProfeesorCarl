@@ -202,8 +202,20 @@ function VoiceConversationInner({
   // Process messages for emotions
   useEffect(() => {
     const lastMessage = messages[messages.length - 1] as any
-    if (lastMessage && lastMessage.prosody?.scores) {
-      const scores = lastMessage.prosody.scores as Record<string, number>
+    if (lastMessage) {
+      // Debug: Log all message types to see what Hume sends
+      console.log('[Voice] Message received:', lastMessage.type, lastMessage)
+    }
+
+    // Check for prosody in different locations (Hume SDK varies)
+    const prosodyScores = lastMessage?.prosody?.scores
+      || lastMessage?.models?.prosody?.scores
+      || lastMessage?.emotion?.scores
+      || null
+
+    if (lastMessage && prosodyScores) {
+      const scores = prosodyScores as Record<string, number>
+      console.log('[Voice] Emotion scores found:', scores)
 
       // Calculate derived metrics
       const engagement = Math.min(1,
