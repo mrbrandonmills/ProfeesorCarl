@@ -77,6 +77,8 @@ function VoiceConversationInner({
     pauseAssistant,
     resumeAssistant,
     isPaused,
+    // Emotion/prosody data comes from this, not messages array
+    lastAssistantProsodyMessage,
   } = useVoice()
 
   const [sessionDuration, setSessionDuration] = useState(0)
@@ -199,30 +201,33 @@ function VoiceConversationInner({
     }
   }, [messages, fetchVideosForTopic])
 
-  // Process messages for emotions
+  // Process prosody/emotion data from Hume
+  // IMPORTANT: lastAssistantProsodyMessage is the correct source for emotion data
+  // The messages array does NOT contain prosody scores
   useEffect(() => {
-    const lastMessage = messages[messages.length - 1] as any
-    if (lastMessage) {
-      // Debug: Log all message types to see what Hume sends
-      console.log('[Voice] Message received:', lastMessage.type, lastMessage)
-    }
+    if (!lastAssistantProsodyMessage) return
 
-    // Check for prosody in different locations (Hume SDK varies)
-    const prosodyScores = lastMessage?.prosody?.scores
-      || lastMessage?.models?.prosody?.scores
-      || lastMessage?.emotion?.scores
-      || null
+    // Debug: Log prosody data structure
+    console.log('[Voice] Prosody message received:', lastAssistantProsodyMessage)
 
-    if (lastMessage && prosodyScores) {
+    // Extract scores from prosody message
+    // Hume EVI structure: lastAssistantProsodyMessage.models.prosody.scores
+    const prosodyScores =
+      lastAssistantProsodyMessage.models?.prosody?.scores ||
+      (lastAssistantProsodyMessage as any).prosody?.scores ||
+      (lastAssistantProsodyMessage as any).scores ||
+      null
+
+    if (prosodyScores) {
       const scores = prosodyScores as Record<string, number>
-      console.log('[Voice] Emotion scores found:', scores)
+      console.log('[Voice] Emotion scores found:', Object.keys(scores).slice(0, 10))
 
-      // Calculate derived metrics
+      // Calculate derived metrics from Hume's 48 emotion categories
       const engagement = Math.min(1,
         ((scores['Interest'] || 0) + (scores['Curiosity'] || 0) + (scores['Joy'] || 0) + (scores['Excitement'] || 0)) / 3
       )
       const joy = scores['Joy'] || 0
-      const surprise = scores['Surprise'] || 0
+      const surprise = scores['Surprise (positive)'] || scores['Surprise'] || 0
 
       const emotions: EmotionData = {
         confidence: Math.max(0, Math.min(1,
@@ -238,10 +243,12 @@ function VoiceConversationInner({
         // Breakthrough moment: high engagement + joy + surprise = insight!
         isBreakthrough: engagement > 0.7 && joy > 0.5 && surprise > 0.3,
       }
+
+      console.log('[Voice] Calculated emotions:', emotions)
       setLiveEmotions(emotions)
       emotionHistoryRef.current.push(emotions)
     }
-  }, [messages])
+  }, [lastAssistantProsodyMessage])
 
   // Start session with timeout wrapper
   const startSession = useCallback(async () => {
