@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { GraduationCap, Users } from 'lucide-react'
+import { GraduationCap, Users, Loader2, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -13,24 +13,36 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/mock-login', {
+      // Try proper login first (for registered users with passwords)
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role: mode })
+        body: JSON.stringify({ email, password })
       })
 
       const data = await response.json()
 
-      if (data.success) {
-        // Redirect based on role
-        router.push(mode === 'professor' ? '/dashboard' : '/onboarding')
+      if (response.ok && data.success) {
+        // Redirect based on role from response
+        const userRole = data.user?.role
+        router.push(userRole === 'teacher' ? '/professor/dashboard' : '/onboarding')
+      } else {
+        setError(data.error || 'Invalid credentials')
       }
-    } catch (error) {
-      console.error('Login error:', error)
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -117,6 +129,18 @@ export default function LoginPage() {
             </motion.p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3"
+            >
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="text-red-800">{error}</span>
+            </motion.div>
+          )}
+
           {/* Role Toggle */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -197,9 +221,17 @@ export default function LoginPage() {
             {/* Sign In Button */}
             <Button
               type="submit"
+              disabled={loading}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all py-6 font-semibold text-base"
             >
-              Sign In
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </motion.form>
 
@@ -216,6 +248,22 @@ export default function LoginPage() {
               className="text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
             >
               {mode === 'professor' ? 'Student Login' : 'Professor Login'}
+            </button>
+          </motion.p>
+
+          {/* Register Link */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.65 }}
+            className="text-center text-sm text-slate-600 mt-3"
+          >
+            Don&apos;t have an account?{' '}
+            <button
+              onClick={() => router.push('/register')}
+              className="text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
+            >
+              Create Account
             </button>
           </motion.p>
         </div>
