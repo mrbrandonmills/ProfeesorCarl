@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mic, MicOff, Phone, PhoneOff, Volume2, Brain, Sparkles, Heart, AlertCircle, Play, Pause, Gauge } from 'lucide-react'
 import { VoiceProvider, useVoice } from '@humeai/voice-react'
+import { processHumeEmotions, mapToMemoryEmotion, type HumeEmotionScores } from '@/lib/memory/hume-emotions'
 
 interface VoiceConversationUIProps {
   userId: string
@@ -41,6 +42,8 @@ interface EmotionData {
   confusion: number
   nervousness: number
   isBreakthrough: boolean // High engagement + joy + surprise = insight moment
+  // Raw Hume prosody scores for memory ranking
+  rawScores?: Record<string, number>
 }
 
 // Professor Carl Config - Claude Sonnet 4 (Hume's best available Anthropic model)
@@ -127,6 +130,66 @@ function VoiceConversationInner({
 
       if (name === 'save_insight') {
         const params = JSON.parse(parameters || '{}')
+
+        // Process Hume emotion history for this memory
+        // Get recent emotions (last 30 seconds of conversation)
+        const recentEmotions = emotionHistoryRef.current.slice(-10)
+        let humeArousal = 0.5
+        let humeValence = 0
+        let humeDominantEmotion = 'neutral'
+
+        if (recentEmotions.length > 0) {
+          // Average the recent raw Hume scores
+          const combinedScores: HumeEmotionScores = {}
+          let samplesWithScores = 0
+
+          for (const sample of recentEmotions) {
+            if (sample.rawScores) {
+              samplesWithScores++
+              for (const [emotion, score] of Object.entries(sample.rawScores)) {
+                if (!combinedScores[emotion]) combinedScores[emotion] = 0
+                combinedScores[emotion] += score
+              }
+            }
+          }
+
+          // Normalize if we have scores
+          if (samplesWithScores > 0) {
+            for (const emotion of Object.keys(combinedScores)) {
+              combinedScores[emotion] /= samplesWithScores
+            }
+
+            // Process into memory-relevant metrics
+            const processed = processHumeEmotions(combinedScores)
+            humeArousal = processed.arousal
+            humeValence = processed.valence
+            humeDominantEmotion = mapToMemoryEmotion(processed.dominantEmotion)
+
+            console.log('[Memory] Hume prosody:', {
+              arousal: humeArousal.toFixed(2),
+              valence: humeValence.toFixed(2),
+              emotion: humeDominantEmotion,
+              priority: processed.isHighPriority ? processed.priorityReason : 'normal'
+            })
+          }
+        }
+
+        // Collect ALL raw Hume scores for storage
+        const allHumeScores: Record<string, number> = {}
+        for (const sample of recentEmotions) {
+          if (sample.rawScores) {
+            for (const [emotion, score] of Object.entries(sample.rawScores)) {
+              if (!allHumeScores[emotion]) allHumeScores[emotion] = 0
+              allHumeScores[emotion] += score
+            }
+          }
+        }
+        // Average them
+        const sampleCount = recentEmotions.filter(s => s.rawScores).length || 1
+        for (const emotion of Object.keys(allHumeScores)) {
+          allHumeScores[emotion] /= sampleCount
+        }
+
         const res = await fetch('/api/memory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -136,6 +199,12 @@ function VoiceConversationInner({
             content: params.content,
             category: params.insight_type,
             sessionId: sessionIdRef.current,
+            // Hume prosody data for cognitive memory ranking
+            humeArousal,
+            humeValence,
+            humeDominantEmotion,
+            // ALL raw Hume emotion scores (48 emotions)
+            humeScores: allHumeScores,
           }),
         })
         const result = await res.json()
@@ -334,6 +403,8 @@ function VoiceConversationInner({
         ),
         // Breakthrough moment: high engagement + joy + surprise = insight!
         isBreakthrough: engagement > 0.7 && joy > 0.5 && surprise > 0.3,
+        // Store raw Hume scores for cognitive memory ranking
+        rawScores: { ...scores },
       }
       setLiveEmotions(emotions)
       emotionHistoryRef.current.push(emotions)

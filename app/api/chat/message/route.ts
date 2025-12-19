@@ -22,17 +22,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const token = request.cookies.get('auth_token')?.value
-    if (!token) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    const payload = verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
+    // Parse body first to check for demo mode
     const { message, sessionId, voiceStyle, lessonContext, demoContext } = await request.json()
+
+    // Demo mode bypass - allow unauthenticated demo sessions
+    let userId: string
+    if (demoContext?.isDemo) {
+      // Use demo user ID based on session
+      userId = 'demo-user-' + (sessionId?.slice(0, 8) || 'default')
+      console.log('[Chat] Demo mode active, using demo userId:', userId)
+    } else {
+      // Normal auth flow - require JWT
+      const token = request.cookies.get('auth_token')?.value
+      if (!token) {
+        return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+      }
+
+      const payload = verifyToken(token)
+      if (!payload) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+      }
+      userId = payload.userId
+    }
 
     // Get session and conversation history
     const { data: session } = await supabaseAdmin
@@ -54,7 +65,7 @@ export async function POST(request: NextRequest) {
     const conversationHistory = messages || []
 
     // Retrieve student context from MCP Memory
-    const studentContext = await retrieveStudentContext(payload.userId)
+    const studentContext = await retrieveStudentContext(userId)
 
     // Add student context to conversation history for Claude
     const enrichedHistory = studentContext
@@ -110,7 +121,7 @@ export async function POST(request: NextRequest) {
       const updatedTopics = session.topics_covered || []
       const currentTopic = updatedTopics[updatedTopics.length - 1] || 'General learning'
 
-      await saveStudentContext(payload.userId, {
+      await saveStudentContext(userId, {
         topics_explored: updatedTopics,
         current_understanding: `Currently working on: ${currentTopic}. Frustration level: ${frustrationLevel}/10.`,
         learning_progress: `Session ${sessionId}: ${attemptCount} attempts. Recent engagement with topic.`,

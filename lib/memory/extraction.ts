@@ -22,6 +22,13 @@ interface ExtractedBrandonMemory {
   summary: string
   category: string
   confidence: number
+  // Cognitive memory fields (LUFY emotional salience)
+  emotional_arousal: number      // 0.0-1.0: How emotionally intense
+  emotional_valence: number      // -1.0 to 1.0: Negative to positive
+  dominant_emotion: string       // joy, fear, determination, curiosity, etc.
+  llm_importance: number         // 0.0-1.0: How important for understanding user
+  granularity: 'utterance' | 'turn' | 'session'  // Detail level
+  perplexity: number            // 0.0-1.0: How surprising/unexpected
 }
 
 interface ExtractedCarlMemory {
@@ -30,6 +37,12 @@ interface ExtractedCarlMemory {
   type: string
   emotionalContext?: Record<string, any>
   effectivenessScore?: number
+  // Cognitive memory fields (LUFY emotional salience)
+  emotional_arousal: number      // 0.0-1.0: How emotionally intense
+  emotional_valence: number      // -1.0 to 1.0: Negative to positive
+  dominant_emotion: string       // joy, fear, determination, curiosity, etc.
+  llm_importance: number         // 0.0-1.0: How important for understanding user
+  granularity: 'utterance' | 'turn' | 'session'  // Detail level
 }
 
 interface ExtractionResult {
@@ -37,22 +50,22 @@ interface ExtractionResult {
   carlMemories: (ExtractedCarlMemory & { embedding: number[] })[]
 }
 
-const EXTRACTION_PROMPT = `You are analyzing a voice conversation between Professor Carl (a British AI tutor) and Brandon Mills (the user).
+const EXTRACTION_PROMPT = `You are analyzing a voice conversation between Professor Carl (a British AI tutor) and the user.
 
-Your task is to extract two types of memories that should be saved for future conversations:
+Your task is to extract two types of memories with COGNITIVE SCORING for human-like recall.
 
-## BRANDON MEMORIES (Facts about Brandon's life)
-Extract any facts, preferences, goals, relationships, experiences, or beliefs that Brandon explicitly shared or clearly implied.
+## BRANDON MEMORIES (Facts about the user's life)
+Extract any facts, preferences, goals, relationships, experiences, or beliefs that the user explicitly shared or clearly implied.
 
 Valid categories:
-- personal_fact: Basic info about Brandon (age, location, etc.)
-- preference: Things Brandon likes/dislikes, learning style
-- goal: What Brandon is working toward
+- personal_fact: Basic info (age, location, etc.)
+- preference: Things user likes/dislikes, learning style
+- goal: What user is working toward
 - relationship: Family, friends, pets, colleagues
 - experience: Past experiences, stories shared
-- skill: Things Brandon knows or is learning
+- skill: Things user knows or is learning
 - belief: Values, worldview, perspectives
-- struggle: Challenges, obstacles Brandon faces
+- struggle: Challenges, obstacles user faces
 - achievement: Accomplishments, wins
 - routine: Habits, daily patterns
 
@@ -61,33 +74,77 @@ Extract observations Carl would make about:
 - Teaching approaches that worked well or poorly
 - Breakthrough/aha moments
 - Inside jokes or shared references that developed
-- Patterns in how Brandon engages
+- Patterns in how user engages
 - Emotional milestones in their relationship
 
 Valid types:
-- teaching_success: Approach that worked well (include effectiveness 0.5-1.0)
-- teaching_failure: Approach that didn't land (include effectiveness -1.0 to 0)
+- teaching_success: Approach that worked well (effectiveness 0.5-1.0)
+- teaching_failure: Approach that didn't land (effectiveness -1.0 to 0)
 - breakthrough_moment: Aha! moment (effectiveness 0.8-1.0)
 - inside_joke: Shared humor developed
 - shared_reference: Things they both understand
 - emotional_milestone: Important emotional moments
-- topic_affinity: Topics Brandon loves/hates
-- interaction_pattern: How Brandon prefers to engage
-- growth_observation: How Brandon has developed
+- topic_affinity: Topics user loves/hates
+- interaction_pattern: How user prefers to engage
+- growth_observation: How user has developed
 - relationship_insight: Meta-observations about their bond
+
+## COGNITIVE SCORING (Required for ALL memories)
+
+For EACH memory, you MUST provide these cognitive scores:
+
+1. **emotional_arousal** (0.0-1.0): How emotionally intense was this moment?
+   - 0.9-1.0: Life-defining (cancer survivor, death of loved one, major achievement)
+   - 0.7-0.8: Significant (career change, relationship milestone)
+   - 0.5-0.6: Moderate (preferences, regular goals)
+   - 0.2-0.4: Low (routine facts, casual mentions)
+
+2. **emotional_valence** (-1.0 to 1.0): Emotional direction
+   - Positive (0.5 to 1.0): Joy, excitement, pride, love
+   - Neutral (-0.2 to 0.2): Factual, informational
+   - Negative (-1.0 to -0.5): Pain, fear, frustration, loss
+
+3. **dominant_emotion**: The primary emotion (one word)
+   - Options: joy, excitement, pride, love, warmth, curiosity, determination,
+     anxiety, fear, frustration, sadness, anger, neutral
+
+4. **llm_importance** (0.0-1.0): How critical for understanding this person?
+   - 0.9-1.0: Core identity (values, life mission, trauma/recovery)
+   - 0.7-0.8: Important context (career, relationships, major preferences)
+   - 0.5-0.6: Useful context (hobbies, minor preferences)
+   - 0.2-0.4: Nice to know (trivia, casual facts)
+
+5. **granularity**: Level of abstraction
+   - "utterance": Single specific fact (e.g., "Has a dog named Achilles")
+   - "turn": Theme from conversation segment (e.g., "Learning about consciousness")
+   - "session": Overarching insight (e.g., "Rebuilding life after cancer")
+
+6. **perplexity** (0.0-1.0, Brandon memories only): How surprising/unexpected?
+   - 0.8-1.0: Very unexpected given what we know
+   - 0.5-0.7: Somewhat surprising
+   - 0.1-0.4: Expected/predictable
+
+## OUTPUT FORMAT
 
 For each memory provide:
 - content: The full memory/fact (1-3 sentences)
 - summary: One-line summary (under 100 chars)
 - category/type: From the lists above
-- confidence: 0.0-1.0 how certain (for Brandon)
+- confidence: 0.0-1.0 how certain (for user memories)
 - effectivenessScore: -1.0 to 1.0 (for Carl teaching memories)
 - emotionalContext: What emotions were present (for Carl)
+- emotional_arousal: Required cognitive score
+- emotional_valence: Required cognitive score
+- dominant_emotion: Required cognitive score
+- llm_importance: Required cognitive score
+- granularity: Required cognitive score
+- perplexity: Required for user memories
 
 IMPORTANT:
 - Only extract memories that are MEANINGFUL for future conversations
 - Don't extract trivial small talk
 - Be specific and include context
+- High emotional_arousal memories should ALWAYS be surfaced in future
 - For Carl memories, focus on what would help future interactions
 
 Respond in JSON format only:
@@ -167,6 +224,15 @@ export async function extractMemoriesFromConversation(
       .map(m => ({
         ...m,
         confidence: Math.max(0, Math.min(1, m.confidence || 0.8)),
+        // Cognitive memory fields with validation and defaults
+        emotional_arousal: Math.max(0, Math.min(1, m.emotional_arousal || 0.5)),
+        emotional_valence: Math.max(-1, Math.min(1, m.emotional_valence || 0)),
+        dominant_emotion: m.dominant_emotion || 'neutral',
+        llm_importance: Math.max(0, Math.min(1, m.llm_importance || 0.5)),
+        granularity: ['utterance', 'turn', 'session'].includes(m.granularity)
+          ? m.granularity
+          : 'utterance',
+        perplexity: Math.max(0, Math.min(1, m.perplexity || 0)),
       }))
 
     const carlMemories = (extracted.carlMemories || [])
@@ -176,6 +242,14 @@ export async function extractMemoriesFromConversation(
         effectivenessScore: m.effectivenessScore !== undefined
           ? Math.max(-1, Math.min(1, m.effectivenessScore))
           : undefined,
+        // Cognitive memory fields with validation and defaults
+        emotional_arousal: Math.max(0, Math.min(1, m.emotional_arousal || 0.5)),
+        emotional_valence: Math.max(-1, Math.min(1, m.emotional_valence || 0)),
+        dominant_emotion: m.dominant_emotion || 'neutral',
+        llm_importance: Math.max(0, Math.min(1, m.llm_importance || 0.5)),
+        granularity: ['utterance', 'turn', 'session'].includes(m.granularity)
+          ? m.granularity
+          : 'turn',
       }))
 
     console.log('[Extraction] Found', brandonMemories.length, 'Brandon memories,', carlMemories.length, 'Carl memories')

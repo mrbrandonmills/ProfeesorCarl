@@ -11,7 +11,7 @@ import { extractMemoriesFromConversation } from '@/lib/memory/extraction'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { sessionId } = body
+    const { sessionId, userId = 'brandon' } = body
 
     if (!sessionId) {
       return NextResponse.json(
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('[Extract] Starting extraction for session:', sessionId)
+    console.log('[Extract] Starting extraction for session:', sessionId, 'user:', userId)
 
     // Create extraction job
     const jobResult = await query<{ id: string }>(`
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       const transcripts = await query(`
         SELECT role, content, emotions, dominant_emotion, emotion_intensity, timestamp
         FROM conversation_transcripts
-        WHERE session_id = $1
+        WHERE session_id = $1 AND user_id = $2
         ORDER BY timestamp ASC
-      `, [sessionId])
+      `, [sessionId, userId])
 
       if (!transcripts || transcripts.length === 0) {
         console.log('[Extract] No transcripts found for session')
@@ -63,31 +63,51 @@ export async function POST(request: NextRequest) {
       // Run extraction
       const extracted = await extractMemoriesFromConversation(transcripts)
 
-      // Save Brandon memories
+      // Save user memories with cognitive scoring
       for (const memory of extracted.brandonMemories) {
         const embeddingStr = `[${memory.embedding.join(',')}]`
+        // Calculate initial memory strength using LUFY formula
+        // S = 2.76×arousal + 0.44×importance + 1.02×retrieval - 0.012×unused
+        const memoryStrength = 2.76 * memory.emotional_arousal + 0.44 * memory.llm_importance + 1.02 * 0 - 0.012 * 0
         await execute(`
-          INSERT INTO brandon_memories
-          (content, summary, category, embedding, confidence, source_session_id, source_type)
-          VALUES ($1, $2, $3, $4::vector, $5, $6, 'conversation')
+          INSERT INTO user_memories
+          (user_id, content, summary, category, embedding, confidence, source_session_id, source_type,
+           emotional_arousal, emotional_valence, dominant_emotion, llm_importance,
+           memory_strength, current_importance, granularity, perplexity)
+          VALUES ($1, $2, $3, $4, $5::vector, $6, $7, 'conversation',
+                  $8, $9, $10, $11, $12, $12, $13, $14)
         `, [
+          userId,
           memory.content,
           memory.summary,
           memory.category,
           embeddingStr,
           memory.confidence,
           sessionId,
+          memory.emotional_arousal,
+          memory.emotional_valence,
+          memory.dominant_emotion,
+          memory.llm_importance,
+          memoryStrength,
+          memory.granularity,
+          memory.perplexity,
         ])
       }
 
-      // Save Carl memories
+      // Save Carl memories with cognitive scoring
       for (const memory of extracted.carlMemories) {
         const embeddingStr = `[${memory.embedding.join(',')}]`
+        // Calculate initial memory strength using LUFY formula
+        const memoryStrength = 2.76 * memory.emotional_arousal + 0.44 * memory.llm_importance + 1.02 * 0 - 0.012 * 0
         await execute(`
           INSERT INTO carl_relational_memories
-          (content, summary, memory_type, embedding, effectiveness_score, emotional_context, source_session_id)
-          VALUES ($1, $2, $3, $4::vector, $5, $6, $7)
+          (user_id, content, summary, memory_type, embedding, effectiveness_score, emotional_context, source_session_id,
+           emotional_arousal, emotional_valence, dominant_emotion, llm_importance,
+           memory_strength, current_importance, granularity)
+          VALUES ($1, $2, $3, $4, $5::vector, $6, $7, $8,
+                  $9, $10, $11, $12, $13, $13, $14)
         `, [
+          userId,
           memory.content,
           memory.summary,
           memory.type,
@@ -95,6 +115,12 @@ export async function POST(request: NextRequest) {
           memory.effectivenessScore || null,
           memory.emotionalContext ? JSON.stringify(memory.emotionalContext) : null,
           sessionId,
+          memory.emotional_arousal,
+          memory.emotional_valence,
+          memory.dominant_emotion,
+          memory.llm_importance,
+          memoryStrength,
+          memory.granularity,
         ])
       }
 

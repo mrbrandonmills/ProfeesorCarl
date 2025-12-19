@@ -30,25 +30,19 @@ export async function GET(request: NextRequest) {
       topicEmbedding = await generateEmbedding(topic)
     }
 
-    // Get user facts (relevant to topic if provided, otherwise recent)
+    // Get user facts using hybrid retrieval with cognitive scoring
+    // Uses LUFY importance + Ebbinghaus decay + emotional arousal + semantic similarity
     let userFacts
     if (topicEmbedding) {
-      userFacts = await vectorSearch(
-        'user_memories',
-        topicEmbedding,
-        {
-          limit: limits.facts,
-          where: `is_current = true AND user_id = '${userId}'`,
-          selectFields: 'id, content, summary, category, confidence',
-        }
-      )
-    } else {
+      // Use hybrid retrieval with semantic search
+      const embeddingStr = `[${topicEmbedding.join(',')}]`
       userFacts = await query(`
-        SELECT id, content, summary, category, confidence
-        FROM user_memories
-        WHERE is_current = true AND user_id = $1
-        ORDER BY reference_count DESC, confidence DESC
-        LIMIT $2
+        SELECT * FROM retrieve_memories_hybrid($1, $2::vector, $3, NULL)
+      `, [userId, embeddingStr, limits.facts])
+    } else {
+      // Use hybrid retrieval without semantic search (still uses importance scoring)
+      userFacts = await query(`
+        SELECT * FROM retrieve_memories_hybrid($1, NULL, $2, NULL)
       `, [userId, limits.facts])
     }
 
@@ -121,23 +115,38 @@ export async function GET(request: NextRequest) {
       WHERE user_id = $1
     `, [userId])
 
-    // Format context for Carl
+    // Format context for Carl with cognitive memory scoring
     const context = {
-      // User's relevant facts
+      // User's relevant facts with emotional salience
       userId,
       userFacts: userFacts.map((f: any) => ({
+        id: f.id,  // Track for RL feedback
         fact: f.summary || f.content,
         category: f.category,
         confidence: f.confidence,
         similarity: f.similarity,
+        // Cognitive memory fields
+        emotionalArousal: f.emotional_arousal,
+        emotionalValence: f.emotional_valence,
+        dominantEmotion: f.dominant_emotion,
+        memoryStrength: f.memory_strength,
+        currentImportance: f.current_importance,
+        hybridScore: f.hybrid_score,
+        granularity: f.granularity,
+        timesCited: f.times_cited,
+        // ALL Hume emotion scores (48 emotions)
+        humeScores: f.hume_scores || {},
       })),
 
       // Carl's relevant memories about their relationship
       carlMemories: carlMemories.map((m: any) => ({
+        id: m.id,  // Track for RL feedback
         memory: m.summary || m.content,
         type: m.memory_type,
         effectiveness: m.effectiveness_score,
         similarity: m.similarity,
+        emotionalArousal: m.emotional_arousal,
+        dominantEmotion: m.dominant_emotion,
       })),
 
       // Teaching approaches that work
@@ -173,6 +182,12 @@ export async function GET(request: NextRequest) {
       generatedAt: new Date().toISOString(),
       topic: topic || null,
       contextDepth,
+
+      // Retrieved memory IDs for RL feedback tracking
+      retrievedMemoryIds: [
+        ...userFacts.map((f: any) => f.id),
+        ...carlMemories.map((m: any) => m.id),
+      ].filter(Boolean),
     }
 
     console.log('[Memory Context] Built context for', userId, 'with', userFacts.length, 'facts,', carlMemories.length, 'Carl memories')
