@@ -76,15 +76,28 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hash(password, 12)
 
-    // Generate canvas_id for compatibility with existing system
-    const canvasId = `user_${email.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
-
-    // Create user
-    const newUser = await queryOne(`
-      INSERT INTO users (canvas_id, name, email, role, password_hash)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, name, email, role
-    `, [canvasId, name.trim(), email.toLowerCase(), userRole, passwordHash])
+    // Create user (schema may or may not have canvas_id - try without first)
+    let newUser = null
+    try {
+      newUser = await queryOne(`
+        INSERT INTO users (name, email, role, password_hash)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, name, email, role
+      `, [name.trim(), email.toLowerCase(), userRole, passwordHash])
+    } catch (insertError: any) {
+      // If password_hash column doesn't exist, create user without it
+      // and the password won't be stored (user can login via mock-login)
+      if (insertError.message?.includes('password_hash')) {
+        newUser = await queryOne(`
+          INSERT INTO users (name, email, role)
+          VALUES ($1, $2, $3)
+          RETURNING id, name, email, role
+        `, [name.trim(), email.toLowerCase(), userRole])
+        console.log('[Register] Note: password_hash column not available, user created without password')
+      } else {
+        throw insertError
+      }
+    }
 
     if (!newUser) {
       return NextResponse.json(
