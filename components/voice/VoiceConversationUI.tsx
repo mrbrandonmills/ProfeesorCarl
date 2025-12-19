@@ -49,6 +49,7 @@ interface EmotionData {
 
 // Inner component that uses the voice hooks
 function VoiceConversationInner({
+  userId,
   isDemo,
   presentationMode,
   onSessionEnd,
@@ -56,6 +57,7 @@ function VoiceConversationInner({
   onVoiceError,
   onVoiceClose,
 }: {
+  userId: string
   isDemo: boolean
   presentationMode: boolean
   onSessionEnd?: (report: SessionReport) => void
@@ -104,14 +106,14 @@ function VoiceConversationInner({
   // Handle Hume EVI tool calls - route to memory APIs
   const handleToolCall = useCallback(async (toolCallMessage: any) => {
     const { name, parameters, tool_call_id } = toolCallMessage
-    console.log('[Memory] Tool call received:', name, parameters)
+    console.log('[Memory] Tool call received:', name, parameters, 'for user:', userId)
 
     try {
       let responseContent = ''
 
       if (name === 'retrieve_memory') {
         const params = JSON.parse(parameters || '{}')
-        const res = await fetch(`/api/memory?query=${encodeURIComponent(params.query || '')}&types=${params.types || 'all'}&limit=${params.limit || 5}`)
+        const res = await fetch(`/api/memory?user_id=${encodeURIComponent(userId)}&query=${encodeURIComponent(params.query || '')}&types=${params.types || 'all'}&limit=${params.limit || 5}`)
         const result = await res.json()
 
         if (result.memories?.length > 0) {
@@ -129,7 +131,8 @@ function VoiceConversationInner({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            type: params.insight_type?.includes('brandon') ? 'brandon' : 'carl',
+            userId,
+            type: params.insight_type?.includes('user') || params.insight_type?.includes('brandon') ? 'user' : 'carl',
             content: params.content,
             category: params.insight_type,
             sessionId: sessionIdRef.current,
@@ -141,12 +144,12 @@ function VoiceConversationInner({
 
       if (name === 'get_conversation_context') {
         const params = JSON.parse(parameters || '{}')
-        const res = await fetch(`/api/memory/context?topic=${encodeURIComponent(params.topic || '')}&depth=${params.depth || 'standard'}`)
+        const res = await fetch(`/api/memory/context?user_id=${encodeURIComponent(userId)}&topic=${encodeURIComponent(params.topic || '')}&depth=${params.depth || 'standard'}`)
         const result = await res.json()
 
         const parts: string[] = []
-        if (result.context?.brandonFacts?.length > 0) {
-          parts.push('About Brandon: ' + result.context.brandonFacts.map((f: any) => f.fact).join('; '))
+        if (result.context?.userFacts?.length > 0) {
+          parts.push('About this user: ' + result.context.userFacts.map((f: any) => f.fact).join('; '))
         }
         if (result.context?.carlMemories?.length > 0) {
           parts.push('Your memories: ' + result.context.carlMemories.map((m: any) => m.memory).join('; '))
@@ -177,7 +180,7 @@ function VoiceConversationInner({
         } as any)
       }
     }
-  }, [sendToolMessage])
+  }, [sendToolMessage, userId])
 
   // Listen for tool_call messages from Hume
   useEffect(() => {
@@ -1322,6 +1325,7 @@ export default function VoiceConversationUI({
       onClose={handleClose}
     >
       <VoiceConversationInner
+        userId={userId}
         isDemo={isDemo}
         presentationMode={presentationMode}
         onSessionEnd={onSessionEnd}

@@ -10,11 +10,12 @@ import { generateEmbedding } from '@/lib/ai/embeddings'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
+  const userId = searchParams.get('user_id') || 'brandon' // Default to brandon for backwards compatibility
   const topic = searchParams.get('topic') || ''
   const contextDepth = searchParams.get('depth') || 'standard' // minimal, standard, comprehensive
 
   try {
-    console.log('[Memory Context] Building context, topic:', topic, 'depth:', contextDepth)
+    console.log('[Memory Context] Building context for user:', userId, 'topic:', topic, 'depth:', contextDepth)
 
     // Determine limits based on depth
     const limits = {
@@ -29,26 +30,26 @@ export async function GET(request: NextRequest) {
       topicEmbedding = await generateEmbedding(topic)
     }
 
-    // Get Brandon facts (relevant to topic if provided, otherwise recent)
-    let brandonFacts
+    // Get user facts (relevant to topic if provided, otherwise recent)
+    let userFacts
     if (topicEmbedding) {
-      brandonFacts = await vectorSearch(
-        'brandon_memories',
+      userFacts = await vectorSearch(
+        'user_memories',
         topicEmbedding,
         {
           limit: limits.facts,
-          where: 'is_current = true',
+          where: `is_current = true AND user_id = '${userId}'`,
           selectFields: 'id, content, summary, category, confidence',
         }
       )
     } else {
-      brandonFacts = await query(`
+      userFacts = await query(`
         SELECT id, content, summary, category, confidence
-        FROM brandon_memories
-        WHERE is_current = true
+        FROM user_memories
+        WHERE is_current = true AND user_id = $1
         ORDER BY reference_count DESC, confidence DESC
-        LIMIT $1
-      `, [limits.facts])
+        LIMIT $2
+      `, [userId, limits.facts])
     }
 
     // Get Carl's relational memories (relevant to topic if provided)
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
         topicEmbedding,
         {
           limit: limits.carl,
+          where: `user_id = '${userId}'`,
           selectFields: 'id, content, summary, memory_type, effectiveness_score',
         }
       )
@@ -66,29 +68,32 @@ export async function GET(request: NextRequest) {
       carlMemories = await query(`
         SELECT id, content, summary, memory_type, effectiveness_score
         FROM carl_relational_memories
+        WHERE user_id = $1
         ORDER BY occurred_at DESC
-        LIMIT $1
-      `, [limits.carl])
+        LIMIT $2
+      `, [userId, limits.carl])
     }
 
     // Get successful teaching approaches
     const teachingApproaches = await query(`
       SELECT content, summary, effectiveness_score
       FROM carl_relational_memories
-      WHERE memory_type = 'teaching_success'
+      WHERE user_id = $1
+        AND memory_type = 'teaching_success'
         AND effectiveness_score > 0.5
       ORDER BY effectiveness_score DESC, times_used DESC
-      LIMIT $1
-    `, [limits.approaches])
+      LIMIT $2
+    `, [userId, limits.approaches])
 
     // Get inside jokes and shared references
     const sharedReferences = await query(`
       SELECT content, summary, memory_type
       FROM carl_relational_memories
-      WHERE memory_type IN ('inside_joke', 'shared_reference')
+      WHERE user_id = $1
+        AND memory_type IN ('inside_joke', 'shared_reference')
       ORDER BY occurred_at DESC
-      LIMIT $1
-    `, [limits.references])
+      LIMIT $2
+    `, [userId, limits.references])
 
     // Get last session summary if available
     const lastSession = await query(`
@@ -101,9 +106,10 @@ export async function GET(request: NextRequest) {
         duration_seconds,
         started_at
       FROM voice_sessions
+      WHERE user_id = $1
       ORDER BY started_at DESC
       LIMIT 1
-    `)
+    `, [userId])
 
     // Get session count for relationship context
     const sessionStats = await query(`
@@ -112,12 +118,14 @@ export async function GET(request: NextRequest) {
         SUM(duration_seconds) as total_time,
         SUM(breakthrough_count) as total_breakthroughs
       FROM voice_sessions
-    `)
+      WHERE user_id = $1
+    `, [userId])
 
     // Format context for Carl
     const context = {
-      // Brandon's relevant facts
-      brandonFacts: brandonFacts.map((f: any) => ({
+      // User's relevant facts
+      userId,
+      userFacts: userFacts.map((f: any) => ({
         fact: f.summary || f.content,
         category: f.category,
         confidence: f.confidence,
@@ -167,7 +175,7 @@ export async function GET(request: NextRequest) {
       contextDepth,
     }
 
-    console.log('[Memory Context] Built context with', brandonFacts.length, 'facts,', carlMemories.length, 'Carl memories')
+    console.log('[Memory Context] Built context for', userId, 'with', userFacts.length, 'facts,', carlMemories.length, 'Carl memories')
 
     return NextResponse.json({
       success: true,
