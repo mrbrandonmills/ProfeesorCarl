@@ -16,7 +16,11 @@ import {
   Plus,
   Edit,
   Trash2,
-  BarChart3
+  BarChart3,
+  Link2,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -47,6 +51,11 @@ export default function ProfessorDashboard() {
   const [courses, setCourses] = useState<Course[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [canvasConnected, setCanvasConnected] = useState(false)
+  const [canvasLoading, setCanvasLoading] = useState(false)
+  const [canvasCourses, setCanvasCourses] = useState<any[]>([])
+  const [canvasError, setCanvasError] = useState<string | null>(null)
+  const [syncingCourse, setSyncingCourse] = useState<number | null>(null)
 
   useEffect(() => {
     checkAuthAndFetchData()
@@ -92,6 +101,99 @@ export default function ProfessorDashboard() {
       setError('Failed to load dashboard')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Check Canvas connection and load Canvas courses
+  const checkCanvasConnection = async () => {
+    setCanvasLoading(true)
+    setCanvasError(null)
+
+    try {
+      const response = await fetch('/api/canvas/oauth')
+      const data = await response.json()
+
+      if (data.connected) {
+        setCanvasConnected(true)
+        await loadCanvasCourses()
+      } else if (data.error?.includes('not configured')) {
+        setCanvasError('Canvas integration is not configured for this instance.')
+      } else {
+        setCanvasConnected(false)
+      }
+    } catch (err) {
+      console.error('Canvas check error:', err)
+      setCanvasError('Failed to check Canvas connection')
+    } finally {
+      setCanvasLoading(false)
+    }
+  }
+
+  const loadCanvasCourses = async () => {
+    try {
+      const response = await fetch('/api/canvas/courses')
+      const data = await response.json()
+
+      if (data.success) {
+        setCanvasCourses(data.courses)
+      } else if (data.needsAuth) {
+        setCanvasConnected(false)
+      }
+    } catch (err) {
+      console.error('Failed to load Canvas courses:', err)
+    }
+  }
+
+  const connectCanvas = async () => {
+    try {
+      const response = await fetch('/api/canvas/oauth')
+      const data = await response.json()
+
+      if (data.authUrl) {
+        window.location.href = data.authUrl
+      } else if (data.error) {
+        setCanvasError(data.message || data.error)
+      }
+    } catch (err) {
+      setCanvasError('Failed to initiate Canvas connection')
+    }
+  }
+
+  const disconnectCanvas = async () => {
+    try {
+      await fetch('/api/canvas/oauth', { method: 'DELETE' })
+      setCanvasConnected(false)
+      setCanvasCourses([])
+    } catch (err) {
+      console.error('Failed to disconnect Canvas:', err)
+    }
+  }
+
+  const syncCanvasCourse = async (courseId: number, courseName: string) => {
+    setSyncingCourse(courseId)
+
+    try {
+      const response = await fetch(`/api/canvas/courses/${courseId}/sync`, {
+        method: 'POST',
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        // Refresh local courses
+        const coursesRes = await fetch('/api/professor/courses')
+        const coursesData = await coursesRes.json()
+        if (coursesData.success) {
+          setCourses(coursesData.courses)
+        }
+        alert(`Successfully imported "${courseName}"!\n\nModules: ${data.stats.modulesImported}\nLessons: ${data.stats.lessonsCreated}\nMaterials: ${data.stats.materialsCreated}`)
+      } else {
+        alert(`Failed to sync course: ${data.error}`)
+      }
+    } catch (err) {
+      console.error('Course sync error:', err)
+      alert('Failed to sync course')
+    } finally {
+      setSyncingCourse(null)
     }
   }
 
@@ -203,6 +305,7 @@ export default function ProfessorDashboard() {
           <Tabs defaultValue="courses" className="w-full">
             <TabsList className="mb-6 w-full sm:w-auto">
               <TabsTrigger value="courses">My Courses</TabsTrigger>
+              <TabsTrigger value="canvas" onClick={() => checkCanvasConnection()}>Canvas Import</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
@@ -270,6 +373,108 @@ export default function ProfessorDashboard() {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="canvas" className="mt-0">
+              <Card className="bg-white/80 backdrop-blur-xl border border-slate-200/50 p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Link2 className="w-6 h-6 text-blue-600" />
+                    <h3 className="text-xl font-semibold text-slate-900">Canvas Integration</h3>
+                  </div>
+                  {canvasConnected && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={disconnectCanvas}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      Disconnect
+                    </Button>
+                  )}
+                </div>
+
+                {canvasLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                    <span className="ml-3 text-slate-600">Checking Canvas connection...</span>
+                  </div>
+                ) : canvasError ? (
+                  <div className="text-center py-8">
+                    <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                    <p className="text-slate-600 mb-4">{canvasError}</p>
+                    <Button variant="outline" onClick={() => checkCanvasConnection()}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Try Again
+                    </Button>
+                  </div>
+                ) : !canvasConnected ? (
+                  <div className="text-center py-8">
+                    <Link2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Connect to Canvas LMS</h4>
+                    <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                      Import your existing Canvas courses directly into Professor Carl to create AI-powered learning experiences.
+                    </p>
+                    <Button
+                      onClick={connectCanvas}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    >
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Connect Canvas
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-2 mb-6 text-green-600">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">Canvas Connected</span>
+                    </div>
+
+                    {canvasCourses.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-slate-600">No courses found in your Canvas account.</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <h4 className="text-sm font-medium text-slate-600 mb-4">
+                          Select a course to import ({canvasCourses.length} courses available)
+                        </h4>
+                        <div className="space-y-3">
+                          {canvasCourses.map((course) => (
+                            <div
+                              key={course.id}
+                              className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200"
+                            >
+                              <div>
+                                <h5 className="font-medium text-slate-900">{course.name}</h5>
+                                <p className="text-sm text-slate-500">{course.courseCode}</p>
+                              </div>
+                              <Button
+                                onClick={() => syncCanvasCourse(course.id, course.name)}
+                                disabled={syncingCourse === course.id}
+                                variant="outline"
+                                size="sm"
+                              >
+                                {syncingCourse === course.id ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Importing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Import
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
             </TabsContent>
 
             <TabsContent value="analytics" className="mt-0">
