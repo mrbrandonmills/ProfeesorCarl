@@ -77,8 +77,8 @@ function VoiceConversationInner({
     pauseAssistant,
     resumeAssistant,
     isPaused,
-    // Emotion/prosody data comes from this, not messages array
-    lastAssistantProsodyMessage,
+    // Tool response for memory integration
+    sendToolMessage,
   } = useVoice()
 
   const [sessionDuration, setSessionDuration] = useState(0)
@@ -96,6 +96,98 @@ function VoiceConversationInner({
 
   const emotionHistoryRef = useRef<EmotionData[]>([])
   const startTimeRef = useRef<number>(0)
+  const sessionIdRef = useRef<string>('')
+
+  // Memory system status
+  const [memoryStatus, setMemoryStatus] = useState<string>('')
+
+  // Handle Hume EVI tool calls - route to memory APIs
+  const handleToolCall = useCallback(async (toolCallMessage: any) => {
+    const { name, parameters, tool_call_id } = toolCallMessage
+    console.log('[Memory] Tool call received:', name, parameters)
+
+    try {
+      let responseContent = ''
+
+      if (name === 'retrieve_memory') {
+        const params = JSON.parse(parameters || '{}')
+        const res = await fetch(`/api/memory?query=${encodeURIComponent(params.query || '')}&types=${params.types || 'all'}&limit=${params.limit || 5}`)
+        const result = await res.json()
+
+        if (result.memories?.length > 0) {
+          responseContent = result.memories.map((m: any) =>
+            `[${m.source}] ${m.data?.content || m.content}`
+          ).join('\n')
+        } else {
+          responseContent = 'No relevant memories found.'
+        }
+      }
+
+      if (name === 'save_insight') {
+        const params = JSON.parse(parameters || '{}')
+        const res = await fetch('/api/memory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: params.insight_type?.includes('brandon') ? 'brandon' : 'carl',
+            content: params.content,
+            category: params.insight_type,
+            sessionId: sessionIdRef.current,
+          }),
+        })
+        const result = await res.json()
+        responseContent = result.success ? 'Insight saved.' : 'Failed to save.'
+      }
+
+      if (name === 'get_conversation_context') {
+        const params = JSON.parse(parameters || '{}')
+        const res = await fetch(`/api/memory/context?topic=${encodeURIComponent(params.topic || '')}&depth=${params.depth || 'standard'}`)
+        const result = await res.json()
+
+        const parts: string[] = []
+        if (result.context?.brandonFacts?.length > 0) {
+          parts.push('About Brandon: ' + result.context.brandonFacts.map((f: any) => f.fact).join('; '))
+        }
+        if (result.context?.carlMemories?.length > 0) {
+          parts.push('Your memories: ' + result.context.carlMemories.map((m: any) => m.memory).join('; '))
+        }
+        responseContent = parts.length > 0 ? parts.join('\n\n') : 'No prior context yet.'
+      }
+
+      // Send tool response back to Hume
+      if (sendToolMessage && tool_call_id) {
+        sendToolMessage({
+          type: 'tool_response',
+          toolCallId: tool_call_id,
+          content: responseContent,
+        } as any)
+        console.log('[Memory] Sent response:', responseContent.substring(0, 100))
+      }
+
+      setMemoryStatus(`Memory: ${name}`)
+      setTimeout(() => setMemoryStatus(''), 2000)
+
+    } catch (err) {
+      console.error('[Memory] Tool error:', err)
+      if (sendToolMessage && toolCallMessage.tool_call_id) {
+        sendToolMessage({
+          type: 'tool_response',
+          toolCallId: toolCallMessage.tool_call_id,
+          content: 'Memory unavailable.',
+        } as any)
+      }
+    }
+  }, [sendToolMessage])
+
+  // Listen for tool_call messages from Hume
+  useEffect(() => {
+    if (!messages || messages.length === 0) return
+    const lastMsg = messages[messages.length - 1] as any
+
+    if (lastMsg?.type === 'tool_call') {
+      handleToolCall(lastMsg)
+    }
+  }, [messages, handleToolCall])
 
   // Professor Carl config with British voice - Sonnet 4 (Hume's best available)
   useEffect(() => {
@@ -201,33 +293,30 @@ function VoiceConversationInner({
     }
   }, [messages, fetchVideosForTopic])
 
-  // Process prosody/emotion data from Hume
-  // IMPORTANT: lastAssistantProsodyMessage is the correct source for emotion data
-  // The messages array does NOT contain prosody scores
+  // Process messages for emotions
   useEffect(() => {
-    if (!lastAssistantProsodyMessage) return
+    const lastMessage = messages[messages.length - 1] as any
+    if (lastMessage) {
+      // Debug: Log all message types to see what Hume sends
+      console.log('[Voice] Message received:', lastMessage.type, lastMessage)
+    }
 
-    // Debug: Log prosody data structure
-    console.log('[Voice] Prosody message received:', lastAssistantProsodyMessage)
+    // Check for prosody in different locations (Hume SDK varies)
+    const prosodyScores = lastMessage?.prosody?.scores
+      || lastMessage?.models?.prosody?.scores
+      || lastMessage?.emotion?.scores
+      || null
 
-    // Extract scores from prosody message
-    // Hume EVI structure: lastAssistantProsodyMessage.models.prosody.scores
-    const prosodyScores =
-      lastAssistantProsodyMessage.models?.prosody?.scores ||
-      (lastAssistantProsodyMessage as any).prosody?.scores ||
-      (lastAssistantProsodyMessage as any).scores ||
-      null
-
-    if (prosodyScores) {
+    if (lastMessage && prosodyScores) {
       const scores = prosodyScores as Record<string, number>
-      console.log('[Voice] Emotion scores found:', Object.keys(scores).slice(0, 10))
+      console.log('[Voice] Emotion scores found:', scores)
 
-      // Calculate derived metrics from Hume's 48 emotion categories
+      // Calculate derived metrics
       const engagement = Math.min(1,
         ((scores['Interest'] || 0) + (scores['Curiosity'] || 0) + (scores['Joy'] || 0) + (scores['Excitement'] || 0)) / 3
       )
       const joy = scores['Joy'] || 0
-      const surprise = scores['Surprise (positive)'] || scores['Surprise'] || 0
+      const surprise = scores['Surprise'] || 0
 
       const emotions: EmotionData = {
         confidence: Math.max(0, Math.min(1,
@@ -243,12 +332,10 @@ function VoiceConversationInner({
         // Breakthrough moment: high engagement + joy + surprise = insight!
         isBreakthrough: engagement > 0.7 && joy > 0.5 && surprise > 0.3,
       }
-
-      console.log('[Voice] Calculated emotions:', emotions)
       setLiveEmotions(emotions)
       emotionHistoryRef.current.push(emotions)
     }
-  }, [lastAssistantProsodyMessage])
+  }, [messages])
 
   // Start session with timeout wrapper
   const startSession = useCallback(async () => {
@@ -256,6 +343,9 @@ function VoiceConversationInner({
     setError(null)
     emotionHistoryRef.current = []
     startTimeRef.current = Date.now()
+    // Generate session ID for memory tracking
+    sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    console.log('[Memory] Session ID:', sessionIdRef.current)
 
     const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY
     console.log('[Voice] Starting session, API key present:', !!apiKey)
