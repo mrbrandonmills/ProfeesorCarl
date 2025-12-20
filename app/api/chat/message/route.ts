@@ -5,6 +5,7 @@ import { generateSocraticResponse } from '@/lib/ai/claude'
 import { detectFrustration } from '@/lib/ai/frustration'
 import { getEnvVar } from '@/lib/env'
 import { retrieveStudentContext, saveStudentContext } from '@/lib/memory/mcp-client'
+import { retrieveMemoryContext, formatMemoryContextForPrompt } from '@/lib/memory/retrieval'
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,15 +65,28 @@ export async function POST(request: NextRequest) {
 
     const conversationHistory = messages || []
 
-    // Retrieve student context from MCP Memory
+    // Retrieve student context from MCP Memory (ephemeral session context)
     const studentContext = await retrieveStudentContext(userId)
 
-    // Add student context to conversation history for Claude
-    const enrichedHistory = studentContext
+    // Retrieve permanent memories from PostgreSQL (Brandon's facts, Carl's notes)
+    const currentTopic = message.substring(0, 100) // Use message start as topic hint
+    const permanentMemories = await retrieveMemoryContext(userId, currentTopic, 10)
+    const memoryContextStr = formatMemoryContextForPrompt(permanentMemories)
+
+    // Add both contexts to conversation history for Claude
+    const contextParts: string[] = []
+    if (memoryContextStr) {
+      contextParts.push(memoryContextStr)
+    }
+    if (studentContext) {
+      contextParts.push(`\n## Current Session:\nTopics explored: ${studentContext.topics_explored.join(', ')}. Current understanding: ${studentContext.current_understanding}. Progress: ${studentContext.learning_progress}.`)
+    }
+
+    const enrichedHistory = contextParts.length > 0
       ? [
           {
             role: 'assistant',
-            content: `[Student Context] Topics explored: ${studentContext.topics_explored.join(', ')}. Current understanding: ${studentContext.current_understanding}. Progress: ${studentContext.learning_progress}.`,
+            content: `[Memory Context]\n${contextParts.join('\n')}`,
           },
           ...conversationHistory,
         ]
