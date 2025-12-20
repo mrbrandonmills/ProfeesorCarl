@@ -5,6 +5,16 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/decay",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/demo-cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

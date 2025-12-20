@@ -34,6 +34,14 @@ interface SessionReport {
     areasToExplore: string[]
     suggestedNextTopics: string[]
   }
+  // Transcript for memory extraction
+  transcript: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    emotion?: string
+    intensity?: number
+  }>
+  sessionId: string
 }
 
 interface EmotionData {
@@ -509,6 +517,34 @@ function VoiceConversationInner({
       if (avgEngagement < 0.4) areasToExplore.push('Try topics you find more personally interesting')
       if (areasToExplore.length === 0) areasToExplore.push('Continue exploring topics of interest')
 
+      // Extract transcript from Hume messages
+      const transcript = messages
+        .filter((m: any) => m.type === 'user_message' || m.type === 'assistant_message')
+        .map((m: any) => {
+          const isUser = m.type === 'user_message'
+          const content = m.message?.content || ''
+          // Get emotion from prosody if available
+          const prosody = m.prosody?.scores || m.models?.prosody?.scores || null
+          let emotion = 'neutral'
+          let intensity = 0.5
+          if (prosody) {
+            // Find dominant emotion
+            const emotions = Object.entries(prosody) as [string, number][]
+            const sorted = emotions.sort((a, b) => b[1] - a[1])
+            if (sorted.length > 0) {
+              emotion = sorted[0][0]
+              intensity = sorted[0][1]
+            }
+          }
+          return {
+            role: isUser ? 'user' as const : 'assistant' as const,
+            content,
+            emotion,
+            intensity,
+          }
+        })
+        .filter((t: any) => t.content.length > 0)
+
       const sessionReport: SessionReport = {
         duration,
         overallEngagement: avgEngagement,
@@ -525,6 +561,8 @@ function VoiceConversationInner({
           areasToExplore,
           suggestedNextTopics: ['Deeper dive into discussed concepts'],
         },
+        transcript,
+        sessionId: sessionIdRef.current,
       }
 
       setReport(sessionReport)

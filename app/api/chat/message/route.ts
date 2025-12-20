@@ -146,6 +146,27 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if memory save fails
     }
 
+    // Call memory feedback API if we retrieved memories
+    if (permanentMemories.retrievedMemoryIds.length > 0) {
+      // Simple heuristic: if response mentions something from memory, it was cited
+      const citedIds = permanentMemories.userFacts
+        .filter(f => response.toLowerCase().includes(f.fact.toLowerCase().substring(0, 20)))
+        .map(f => f.id)
+        .filter(Boolean)
+
+      // Fire-and-forget feedback call (don't block response)
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/memory/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          userId,
+          retrievedMemoryIds: permanentMemories.retrievedMemoryIds,
+          citedMemoryIds: citedIds
+        })
+      }).catch(err => console.error('[Chat] Memory feedback error:', err))
+    }
+
     return NextResponse.json({ response, frustrationLevel })
   } catch (error) {
     console.error('Chat error:', error)

@@ -187,15 +187,42 @@ function VoicePageContent() {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    sessionId: `session_${Date.now()}`,
+                    sessionId: report.sessionId || `session_${Date.now()}`,
                     userId,
                     report,
                     isDemo,
                     timestamp: new Date().toISOString()
                   })
                 })
+
+                // Save memories from voice conversation
+                if (report.transcript && report.transcript.length >= 2) {
+                  console.log('[Voice] Saving memories from transcript:', report.transcript.length, 'messages')
+                  await fetch('/api/memory/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userId: userId || 'brandon',
+                      sessionId: report.sessionId,
+                      messages: report.transcript.map((t: any) => ({
+                        role: t.role,
+                        content: t.content,
+                        dominant_emotion: t.emotion,
+                        emotion_intensity: t.intensity
+                      })),
+                      sessionData: {
+                        topic: report.learningProgress?.topicsExplored?.[0] || 'General learning',
+                        durationSeconds: report.duration,
+                        engagementScore: report.overallEngagement,
+                        breakthroughCount: report.learningProgress?.insightsGained || 0
+                      },
+                      demoContext: isDemo ? { isDemo: true, userId } : undefined
+                    })
+                  })
+                  console.log('[Voice] Memories saved successfully')
+                }
               } catch (err) {
-                console.error('Failed to save session:', err)
+                console.error('Failed to save session/memories:', err)
               }
             }}
           />
