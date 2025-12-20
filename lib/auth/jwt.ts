@@ -6,6 +6,7 @@ export interface JWTPayload {
   userId: string
   email: string
   role?: string
+  name?: string
   iat?: number
   exp?: number
 }
@@ -43,7 +44,8 @@ export function refreshToken(oldToken: string): string | null {
       return signToken({
         userId: decoded.userId,
         email: decoded.email,
-        role: decoded.role
+        role: decoded.role,
+        name: decoded.name
       })
     }
 
@@ -56,7 +58,8 @@ export function refreshToken(oldToken: string): string | null {
     return signToken({
       userId: decoded.userId,
       email: decoded.email,
-      role: decoded.role
+      role: decoded.role,
+      name: decoded.name
     })
   } catch {
     return null
