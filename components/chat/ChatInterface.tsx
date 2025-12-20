@@ -148,6 +148,57 @@ I'm ready when you are!`
     scrollToBottom()
   }, [messages])
 
+  // Save memories when session ends (unmount or page leave)
+  useEffect(() => {
+    const saveMemories = async () => {
+      if (!sessionId || messages.length < 2) return
+
+      try {
+        // Get userId from demo context or auth
+        const userId = demoContext?.userName?.toLowerCase().replace(/\s+/g, '-') || 'brandon'
+
+        await fetch('/api/memory/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            sessionId,
+            messages: messages.map(m => ({
+              role: m.role,
+              content: m.content,
+            })),
+            demoContext,
+          }),
+        })
+        console.log('💾 Memories saved for session:', sessionId)
+      } catch (error) {
+        console.error('Failed to save memories:', error)
+      }
+    }
+
+    // Save on page unload
+    const handleBeforeUnload = () => {
+      if (sessionId && messages.length >= 2) {
+        // Use sendBeacon for reliable delivery
+        const userId = demoContext?.userName?.toLowerCase().replace(/\s+/g, '-') || 'brandon'
+        navigator.sendBeacon('/api/memory/process', JSON.stringify({
+          userId,
+          sessionId,
+          messages: messages.map(m => ({ role: m.role, content: m.content })),
+          demoContext,
+        }))
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // Cleanup: save memories when component unmounts
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      saveMemories()
+    }
+  }, [sessionId, messages, demoContext])
+
   const speakText = async (text: string) => {
     try {
       // Stop any currently playing audio
