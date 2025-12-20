@@ -4,10 +4,11 @@ const JWT_SECRET = process.env.JWT_SECRET!
 
 export interface JWTPayload {
   userId: string
-  email: string
+  email?: string
   role?: string
   name?: string
   courseId?: string
+  purpose?: string
   iat?: number
   exp?: number
 }

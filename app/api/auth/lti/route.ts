@@ -76,7 +76,9 @@ export async function POST(request: NextRequest) {
     // Generate JWT
     const token = signToken({
       userId: user.id,
+      email: user.email,
       role: user.role,
+      name: user.name,
       courseId: ltiData.course_id,
     })
 
