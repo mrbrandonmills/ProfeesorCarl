@@ -5,23 +5,39 @@ AI-powered teaching assistant that helps students learn through personalized con
 
 ---
 
-## Latest Deployment Status (2025-12-09)
+## Latest Deployment Status (2025-12-19)
 
 ### ✅ LIVE IN PRODUCTION
-- **Production URL**: https://profeesor-carl-dljgzkwno-brandons-projects-c4dfa14a.vercel.app
-- **Preview URL**: https://profeesor-carl-q8g80ji6f-brandons-projects-c4dfa14a.vercel.app
-- **Last Deployed**: 2025-12-09
+- **Production URL**: https://profeesor-carl.vercel.app
+- **Last Deployed**: 2025-12-19
 - **Build Status**: ✅ Passing (Zero TypeScript errors)
 - **Deployment Platform**: Vercel
+- **Latest Commit**: `9f6100d` - docs: Add QA test results
 
-### Recent Changes (Latest Session)
-1. ✅ Completed catalog redirect implementation (`/catalog` → `/chat`)
-2. ✅ Cleaned up orphaned files:
-   - Removed `/app/api/courses/catalog/route.ts` (unused API)
-   - Removed `/app/dashboard-test/page.tsx` (dev testing only)
-   - Removed all `.DS_Store` files
-3. ✅ Created safety backup branch: `pre-deployment-backup`
-4. ✅ Deployed to Vercel (preview + production)
+### Recent Changes (2025-12-19 Session)
+
+#### Memory System Fixes - All Complete
+1. ✅ **Phase 1: Voice Session Memory Save**
+   - Updated `VoiceConversationUI.tsx` - Added transcript to SessionReport
+   - Updated `app/voice/page.tsx` - Calls `/api/memory/process` on session end
+
+2. ✅ **Phase 2: Memory Feedback Integration**
+   - Updated `app/api/chat/message/route.ts` - Fire-and-forget call to `/api/memory/feedback`
+
+3. ✅ **Phase 3: Demo Cleanup Cron**
+   - Created `app/api/cron/demo-cleanup/route.ts` - Deletes demo records > 7 days old
+   - Updated `vercel.json` - Added cron schedule (daily at 3 AM UTC)
+
+4. ✅ **Phase 4: JWT Token Refresh**
+   - Updated `lib/auth/jwt.ts` - Added `refreshToken()` with 24h grace period
+   - Created `app/api/auth/refresh/route.ts` - GET checks status, POST refreshes
+
+### QA Test Results (2025-12-19)
+- **31/32 tests pass (96.9%)**
+- **65 memories in database** for Brandon
+- Memory decay cron working (avg importance: 2.47)
+- All API endpoints responding correctly
+- Full results: `scripts/qa-results.json`
 
 ---
 
@@ -291,6 +307,25 @@ git log --oneline -5
 
 ## Session History
 
+### 2025-12-19 Session - Memory System Complete
+- **Agent**: Claude Opus 4.5
+- **Tasks Completed**:
+  1. Fixed voice session memory save - now calls `/api/memory/process` on session end
+  2. Integrated memory feedback API - chat route calls `/api/memory/feedback`
+  3. Created demo cleanup cron job - deletes old demo records daily
+  4. Implemented JWT token refresh with 24h grace period
+  5. Ran comprehensive QA - 31/32 tests pass (96.9%)
+  6. Updated CLAUDE.md and created qa-results.json
+- **Key Files Changed**:
+  - `app/voice/page.tsx`
+  - `components/voice/VoiceConversationUI.tsx`
+  - `app/api/chat/message/route.ts`
+  - `app/api/cron/demo-cleanup/route.ts` (new)
+  - `app/api/auth/refresh/route.ts` (new)
+  - `lib/auth/jwt.ts`
+  - `vercel.json`
+- **Status**: ✅ All tasks completed, deployed to production
+
 ### 2025-12-09 Session
 - **Agent**: Claude Code
 - **Tasks Completed**:
@@ -301,10 +336,34 @@ git log --oneline -5
   5. Deployed to Vercel preview and production
   6. Created this CLAUDE.md handoff document
 - **Status**: ✅ All tasks completed successfully
-- **Next**: Manual QA testing recommended
 
 ---
 
-**Last Updated**: 2025-12-09
+## Memory System Architecture
+
+### LUFY Emotional Salience Formula
+Memory strength = `3.0×log(1+citations) + 2.5×hume_arousal + 1.0×text_arousal + 0.5×importance`
+
+### Key Memory Files
+- `/lib/memory/retrieval.ts` - Fetches permanent memories for chat/voice
+- `/lib/memory/save-conversation-memory.ts` - Extracts and saves memories from conversations
+- `/lib/memory/hume-emotions.ts` - Processes Hume prosody into memory-relevant metrics
+- `/app/api/memory/process/route.ts` - API to process conversation into memories
+- `/app/api/memory/feedback/route.ts` - Updates memory strength based on citations
+- `/app/api/memory/context/route.ts` - Retrieves memory context for a user
+
+### Database
+- **PostgreSQL with pgvector** - 1536-dimension embeddings
+- **65 memories seeded** for Brandon from ChatGPT
+- **Hybrid retrieval** - semantic similarity + cognitive importance scoring
+
+### Cron Jobs (vercel.json)
+- `/api/cron/decay` - Hourly, applies Ebbinghaus forgetting curve
+- `/api/cron/demo-cleanup` - Daily at 3 AM UTC, cleans old demo records
+
+---
+
+**Last Updated**: 2025-12-19
 **Status**: Ready for next agent
 **Deployment**: Live in production ✅
+**Memory System**: Fully operational with 65 Brandon memories
