@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           INSERT INTO user_memories
           (user_id, content, summary, category, embedding, confidence, source_type,
            memory_strength, current_importance, granularity)
-          VALUES ($1, $2, $3, $4, $5::vector, 0.9, $6, $7, $7, 'insight')
+          VALUES ($1, $2, $3, $4, $5::vector, 0.9, $6, $7, $7, 'utterance')
         `, [
           effectiveUserId,
           content,
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
           INSERT INTO carl_relational_memories
           (user_id, content, summary, memory_type, embedding, source_session_id,
            memory_strength, current_importance, granularity)
-          VALUES ($1, $2, $3, $4, $5::vector, $6, $7, $7, 'insight')
+          VALUES ($1, $2, $3, $4, $5::vector, $6, $7, $7, 'turn')
         `, [
           effectiveUserId,
           content,
