@@ -114,9 +114,11 @@ export async function POST(request: NextRequest) {
       email: newUser.email,
     })
 
-    // Create response with cookie
+    // Create response with token (for mobile) and cookie (for web)
     const response = NextResponse.json({
       success: true,
+      token: token,  // For mobile apps
+      userId: newUser.id,
       user: {
         id: newUser.id,
         name: newUser.name,
