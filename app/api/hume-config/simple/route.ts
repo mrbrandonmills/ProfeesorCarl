@@ -13,10 +13,8 @@ export async function POST() {
   }
 
   try {
-    // Get the base URL for our custom LLM endpoint
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_BASE_URL || 'https://profeesor-carl.vercel.app'
+    // ALWAYS use production URL - deployment-specific URLs break when we redeploy
+    const baseUrl = 'https://profeesor-carl.vercel.app'
 
     console.log('[Simple Config] Creating config with custom LLM at:', baseUrl)
 
