@@ -75,7 +75,7 @@ Please provide a JSON response with:
 Respond ONLY with valid JSON, no additional text.`
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-5-20251101',
       max_tokens: 1024,
       system: 'You are an educational content analyzer. Respond only with valid JSON.',
       messages: [

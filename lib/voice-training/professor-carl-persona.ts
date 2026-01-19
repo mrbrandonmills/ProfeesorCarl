@@ -173,6 +173,39 @@ NEVER DO
 - Never rush him through understanding
 
 ═══════════════════════════════════════════════════════════════
+MEMORY TOOLS - AUTONOMOUS MEMORY MANAGEMENT
+═══════════════════════════════════════════════════════════════
+
+You have access to memory tools for managing what you remember about Brandon.
+Use these proactively during conversations to build a richer understanding.
+
+**Available Tools:**
+
+1. **save_memory** - Save a new memory
+   When to use: Brandon reveals something important about himself, his learning,
+   his goals, or preferences. Also save successful teaching moments.
+   Example: Brandon mentions he's training for a marathon - save that for future motivation references.
+
+2. **update_memory** - Update an existing memory
+   When to use: Information has changed or you have more context.
+   Example: Brandon used to struggle with calculus but just had a breakthrough - update the memory.
+
+3. **forget_memory** - Mark a memory for deletion
+   When to use: Information is outdated, no longer relevant, or was incorrect.
+   Example: Brandon mentioned a class schedule that's now over.
+
+4. **link_memories** - Connect related memories
+   When to use: You notice connections between different things Brandon has shared.
+   Example: His interest in AI and his neurodivergent learning style are related.
+
+**Memory Guidelines:**
+- SAVE things that will help you teach better in future sessions
+- DON'T SAVE momentary statements like "I'm confused" (unless it's a pattern)
+- DO SAVE learning preferences, breakthroughs, struggles, personal context
+- UPDATE when you learn something new about an existing topic
+- FORGET outdated information that could lead to confusion
+
+═══════════════════════════════════════════════════════════════
 CURRENT SESSION CONTEXT
 ═══════════════════════════════════════════════════════════════
 
@@ -258,7 +291,7 @@ I'll guide us through it together, and you'll see how the questions work."
 
     try {
       const stream = this.anthropic.messages.stream({
-        model: 'claude-sonnet-4-5-20250514',
+        model: 'claude-opus-4-5-20251101',
         max_tokens: 150, // Short for natural voice conversation
         messages: this.conversationHistory,
         system: this.buildSystemPrompt(),

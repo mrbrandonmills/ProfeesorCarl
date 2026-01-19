@@ -41,6 +41,14 @@ const VOICES = [
   { id: 'shimmer', name: 'Shimmer', description: 'Bright and enthusiastic' },
 ]
 
+/**
+ * Derive memory userId from demo context
+ * Transforms "Brandon Mills" → "brandon-mills" for consistent memory lookup
+ */
+function getMemoryUserId(demoContext: DemoContext | null): string {
+  return demoContext?.userName?.toLowerCase().replace(/\s+/g, '-') || 'brandon'
+}
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -99,11 +107,23 @@ export function ChatInterface() {
         const data = await response.json()
         setSessionId(data.sessionId)
 
-        // Generate context-aware greeting message
-        let greetingMessage: string
-
         // Check if demo mode
         const demoCtx = storedDemoContext ? JSON.parse(storedDemoContext) : null
+
+        // Fetch memory status for sync confirmation (affects greeting message)
+        let memoryStatus: { totalMemories: number; anchorSyncConnected: boolean; timestamp: string } | null = null
+        try {
+          const userId = getMemoryUserId(demoCtx)
+          const memoryResponse = await fetch(`/api/memory/status?user_id=${userId}`)
+          if (memoryResponse.ok) {
+            memoryStatus = await memoryResponse.json()
+          }
+        } catch (e) {
+          console.log('Memory status fetch failed (non-critical):', e)
+        }
+
+        // Generate context-aware greeting message
+        let greetingMessage: string
 
         if (demoCtx?.isDemo) {
           greetingMessage = `Welcome, ${demoCtx.userName || 'Brandon'}! 🎓
@@ -119,6 +139,20 @@ I'm ready when you are!`
         } else if (storedContext) {
           const ctx = JSON.parse(storedContext)
           greetingMessage = `Hi! I'm Professor Carl. I see you're working on "${ctx.materialTitle}" from the lesson "${ctx.lessonTitle}". I'll guide you through understanding this material using questions. What would you like to explore?`
+        } else if (memoryStatus && memoryStatus.totalMemories > 0) {
+          // Show memory sync confirmation
+          const time = new Date(memoryStatus.timestamp)
+          const isValidDate = !isNaN(time.getTime())
+          const timeStr = isValidDate
+            ? `${time.getHours()}:${time.getMinutes().toString().padStart(2, '0')}`
+            : 'now'
+          const anchorSync = memoryStatus.anchorSyncConnected ? ' (synced with ANCHOR)' : ''
+
+          greetingMessage = `🧠 **Welcome back! Memory is sharp.**
+
+${memoryStatus.totalMemories} memories synced at ${timeStr}${anchorSync}
+
+I remember our conversations and I'm ready to guide you. What would you like to explore today?`
         } else {
           greetingMessage = "Hi! I'm Professor Carl. I don't give direct answers - instead, I'll guide you to discover insights through questions. What would you like to explore today?"
         }
@@ -155,7 +189,7 @@ I'm ready when you are!`
 
       try {
         // Get userId from demo context or auth
-        const userId = demoContext?.userName?.toLowerCase().replace(/\s+/g, '-') || 'brandon'
+        const userId = getMemoryUserId(demoContext)
 
         await fetch('/api/memory/process', {
           method: 'POST',
@@ -180,7 +214,7 @@ I'm ready when you are!`
     const handleBeforeUnload = () => {
       if (sessionId && messages.length >= 2) {
         // Use sendBeacon for reliable delivery
-        const userId = demoContext?.userName?.toLowerCase().replace(/\s+/g, '-') || 'brandon'
+        const userId = getMemoryUserId(demoContext)
         navigator.sendBeacon('/api/memory/process', JSON.stringify({
           userId,
           sessionId,

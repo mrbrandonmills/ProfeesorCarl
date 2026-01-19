@@ -84,6 +84,31 @@ CREATE TABLE video_analytics (
     marked_helpful BOOLEAN DEFAULT FALSE
 );
 
+-- Teaching Strategies (Experiential Memory)
+-- Based on 2026 research: "Experiential memory stores trajectories - past actions → outcomes"
+-- Remembers what teaching approaches WORKED for each student
+CREATE TABLE teaching_strategies (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,  -- Student this worked for
+    topic VARCHAR(255) NOT NULL,  -- Subject area (calculus, derivatives, limits, etc.)
+    strategy_used TEXT NOT NULL,  -- Teaching approach (visual, analogy, socratic, examples, step-by-step)
+    outcome VARCHAR(50) NOT NULL CHECK (outcome IN ('breakthrough', 'partial_success', 'no_progress', 'confusion')),
+    hume_arousal_before DECIMAL(3,2),  -- Emotional state at start (0-1)
+    hume_arousal_after DECIMAL(3,2),   -- Emotional state at end (0-1)
+    arousal_delta DECIMAL(3,2) GENERATED ALWAYS AS (hume_arousal_after - hume_arousal_before) STORED,
+    session_id VARCHAR(255),
+    evidence TEXT,  -- What indicated the outcome
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    success_score DECIMAL(3,2) DEFAULT 0.5,  -- RL-updated score (0-1)
+    times_used INTEGER DEFAULT 1,  -- How many times we've tried this
+    last_used_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for fast lookup of successful strategies by user and topic
+CREATE INDEX idx_teaching_strategies_user_topic ON teaching_strategies(user_id, topic);
+CREATE INDEX idx_teaching_strategies_success ON teaching_strategies(success_score DESC);
+CREATE INDEX idx_teaching_strategies_outcome ON teaching_strategies(outcome);
+
 -- Indexes for performance
 CREATE INDEX idx_sessions_student ON sessions(student_id);
 CREATE INDEX idx_sessions_course ON sessions(course_id);

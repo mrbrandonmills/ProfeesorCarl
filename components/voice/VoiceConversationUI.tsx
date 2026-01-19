@@ -269,44 +269,31 @@ function VoiceConversationInner({
     }
   }, [messages, handleToolCall])
 
-  // Professor Carl config - creates fresh UCSD demo config with Socratic prompt
+  // Professor Carl config - create simple config with custom LLM (we control the prompt)
   useEffect(() => {
-    const loadOrCreateConfig = async () => {
+    const setupConfig = async () => {
       try {
-        // First check if UCSD Demo config exists
-        const checkRes = await fetch('/api/hume-config')
-        const checkData = await checkRes.json()
-
-        if (checkData.exists && checkData.configId) {
-          console.log('[Voice] Using existing Professor Carl config:', checkData.configId)
-          setConfigId(checkData.configId)
-          setConfigLoading(false)
-          return
-        }
-
-        // Create new config with Socratic prompt
-        console.log('[Voice] Creating new Professor Carl UCSD config...')
-        const createRes = await fetch('/api/hume-config', { method: 'POST' })
-        const createData = await createRes.json()
-
-        if (createData.success && createData.configId) {
-          console.log('[Voice] Created new config:', createData.configId)
-          setConfigId(createData.configId)
+        console.log('[Voice] Creating config with custom LLM endpoint...')
+        const res = await fetch('/api/hume-config/simple', { method: 'POST' })
+        const data = await res.json()
+        
+        if (data.success && data.configId) {
+          console.log('[Voice] Config ready:', data.configId)
+          setConfigId(data.configId)
         } else {
-          // Fallback to original config if creation fails
-          console.warn('[Voice] Config creation failed, using fallback')
-          setConfigId('52b75fbf-732c-48fe-af7e-5aae177e8136')
+          console.error('[Voice] Config creation failed:', data.error)
+          // NO fallback - we need our custom LLM
+          setConfigId(null)
         }
       } catch (err) {
         console.error('[Voice] Config error:', err)
-        // Fallback to original config
-        setConfigId('52b75fbf-732c-48fe-af7e-5aae177e8136')
+        setConfigId(null)
       } finally {
         setConfigLoading(false)
       }
     }
 
-    loadOrCreateConfig()
+    setupConfig()
   }, [])
 
   // Voice speed control - patches Web Audio API to apply playback rate

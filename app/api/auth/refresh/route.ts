@@ -8,7 +8,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { refreshToken, verifyToken } from '@/lib/auth/jwt'
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value
+  // Accept token from cookie (web) OR Authorization header (mobile)
+  let token = request.cookies.get('auth_token')?.value
+
+  if (!token) {
+    const authHeader = request.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.substring(7)
+    }
+  }
 
   if (!token) {
     return NextResponse.json({ error: 'No token provided' }, { status: 401 })
@@ -27,6 +35,7 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({
     success: true,
     message: 'Token refreshed',
+    token: newToken, // Return new token in body for mobile clients
     user: payload ? {
       userId: payload.userId,
       email: payload.email,
@@ -48,12 +57,21 @@ export async function POST(request: NextRequest) {
 
 // GET: Check if token needs refresh
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value
+  // Accept token from cookie (web) OR Authorization header (mobile)
+  let token = request.cookies.get('auth_token')?.value
+
+  if (!token) {
+    const authHeader = request.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.substring(7)
+    }
+  }
 
   if (!token) {
     return NextResponse.json({
       needsRefresh: false,
       authenticated: false,
+      valid: false,
       message: 'No token'
     })
   }
@@ -68,6 +86,7 @@ export async function GET(request: NextRequest) {
     const oneDay = 24 * 60 * 60
 
     return NextResponse.json({
+      valid: true, // For mobile client compatibility
       needsRefresh: (exp - now) < oneDay,
       authenticated: true,
       expiresIn: exp - now,

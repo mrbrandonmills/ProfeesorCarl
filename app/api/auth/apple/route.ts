@@ -190,15 +190,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user has memories (existing user with seeded data)
+    // Check if user has memories and determine canonical memoryUserId
     // Note: memories table uses TEXT user_id (e.g., 'brandon', email prefix, or numeric id as string)
     let hasMemories = false
+    let memoryUserId = user.id.toString() // Default to numeric id
     try {
       // Try multiple user_id formats since memories may use different formats
       const emailPrefix = userEmail?.split('@')[0]?.toLowerCase() || ''
       const possibleUserIds = [
+        emailPrefix,                   // email prefix like 'brandon' (most likely for seeded users)
         user.id.toString(),           // numeric id as string
-        emailPrefix,                   // email prefix like 'brandon'
         userEmail?.toLowerCase(),      // full email
       ].filter(Boolean)
 
@@ -211,13 +212,16 @@ export async function POST(request: NextRequest) {
         )
         if (memoryCount && parseInt(memoryCount.count) > 0) {
           hasMemories = true
+          memoryUserId = uid // Use the user_id format that has memories
           console.log('[Apple Auth] Found memories with user_id:', uid, 'count:', memoryCount.count)
           break
         }
       }
 
-      if (!hasMemories) {
-        console.log('[Apple Auth] No memories found for any user_id format')
+      // If no existing memories, use email prefix for new users (consistent cross-app format)
+      if (!hasMemories && emailPrefix) {
+        memoryUserId = emailPrefix
+        console.log('[Apple Auth] No memories found, using email prefix as memoryUserId:', memoryUserId)
       }
     } catch (memError) {
       console.log('[Apple Auth] Could not check memories:', memError)
@@ -239,6 +243,7 @@ export async function POST(request: NextRequest) {
       success: true,
       token: token,
       userId: user.id,
+      memoryUserId: memoryUserId, // Canonical ID for memory operations (matches existing memories)
       isNewUser: isNewUser,
       hasMemories: hasMemories,
       user: {
@@ -246,6 +251,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         email: user.email,
         role: user.role,
+        memoryUserId: memoryUserId, // Also include in user object for convenience
       },
     })
 

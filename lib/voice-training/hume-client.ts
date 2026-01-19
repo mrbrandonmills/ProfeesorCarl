@@ -37,7 +37,7 @@ export class HumeVoiceClient {
         },
         languageModel: {
           modelProvider: 'ANTHROPIC',
-          modelResource: 'claude-sonnet-4-5-20250514' as any,
+          modelResource: 'claude-opus-4-5-20251101' as any,
           temperature: 0.7,
         },
         eventMessages: {

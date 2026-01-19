@@ -5,8 +5,10 @@
  */
 
 import { extractMemoriesFromConversation } from './extraction'
-import { execute, queryOne } from '@/lib/db/postgres'
+import { execute, queryOne, query } from '@/lib/db/postgres'
 import { calculateMemoryStrength } from './hume-emotions'
+import { shouldSaveMemory, mergeMemories } from './filter'
+import { extractTeachingStrategy, saveTeachingStrategy } from './experiential'
 
 interface ConversationMessage {
   role: 'user' | 'assistant'
@@ -70,14 +72,54 @@ export async function saveConversationMemories(
       return result
     }
 
-    // 2. Save user memories (Brandon facts)
+    // 2. Fetch existing memories for filter comparison
+    let existingMemoryContents: string[] = []
+    try {
+      const existingMemories = await query(
+        `SELECT content FROM user_memories WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+        [userId]
+      )
+      existingMemoryContents = existingMemories.map((r: { content: string }) => r.content)
+    } catch (e) {
+      console.log('[Memory Save] Could not fetch existing memories for filtering')
+    }
+
+    // 3. Save user memories (Brandon facts) with filtering
+    let filteredCount = 0
+    let mergedCount = 0
+
     for (const memory of extracted.brandonMemories) {
       try {
+        // Apply memory filter before saving
+        const filterResult = await shouldSaveMemory(
+          memory.content,
+          memory.category,
+          existingMemoryContents,
+          userId
+        )
+
+        if (!filterResult.shouldSave) {
+          filteredCount++
+          console.log(`[Memory Filter] Skipped: "${memory.content.slice(0, 40)}..." - ${filterResult.reason}`)
+          continue
+        }
+
+        // Handle memory merging if applicable
+        let contentToSave = memory.content
+        if (filterResult.mergeWith) {
+          contentToSave = mergeMemories(filterResult.mergeWith, memory.content, filterResult.reason)
+          mergedCount++
+          console.log(`[Memory Filter] Merged with existing memory`)
+        }
+
+        // Adjust importance if filter suggests
+        const adjustedImportance = filterResult.adjustedImportance ?? memory.llm_importance
+
         const memoryStrength = calculateMemoryStrength({
           timesCited: 0,
           humeArousal: memory.emotional_arousal,
           textArousal: memory.emotional_arousal,
-          llmImportance: memory.llm_importance,
+          llmImportance: adjustedImportance,
           timesRetrievedUnused: 0,
         })
 
@@ -93,7 +135,7 @@ export async function saveConversationMemories(
           ON CONFLICT DO NOTHING
         `, [
           userId,
-          memory.content,
+          contentToSave,
           memory.summary,
           memory.category,
           embeddingStr,
@@ -102,19 +144,24 @@ export async function saveConversationMemories(
           memory.emotional_arousal,
           memory.emotional_valence,
           memory.dominant_emotion,
-          memory.llm_importance,
+          adjustedImportance,
           memoryStrength,
           memory.granularity,
           memory.perplexity || 0,
         ])
 
         result.userMemoriesSaved++
+        existingMemoryContents.push(contentToSave) // Add to existing for subsequent filter checks
       } catch (memError) {
         console.error('[Memory Save] Error saving user memory:', memError)
       }
     }
 
-    // 3. Save Carl memories (relational memories)
+    if (filteredCount > 0 || mergedCount > 0) {
+      console.log(`[Memory Filter] Summary: ${filteredCount} filtered out, ${mergedCount} merged`)
+    }
+
+    // 4. Save Carl memories (relational memories)
     for (const memory of extracted.carlMemories) {
       try {
         const memoryStrength = calculateMemoryStrength({
@@ -157,7 +204,34 @@ export async function saveConversationMemories(
       }
     }
 
-    // 4. Save/update voice session if applicable
+    // 5. Extract and save teaching strategy (Experiential Memory)
+    try {
+      // Build Hume emotion data from messages
+      const userMessages = messages.filter(m => m.role === 'user')
+      const startEmotion = userMessages[0]?.emotion_intensity
+      const endEmotion = userMessages[userMessages.length - 1]?.emotion_intensity
+
+      const humeData = {
+        start_arousal: startEmotion,
+        end_arousal: endEmotion,
+        peak_moment: undefined,
+        dominant_emotions: userMessages
+          .map(m => m.dominant_emotion)
+          .filter(Boolean) as string[]
+      }
+
+      const strategy = await extractTeachingStrategy(messages, humeData, userId, sessionId)
+
+      if (strategy) {
+        await saveTeachingStrategy(strategy)
+        console.log(`[Memory Save] Saved teaching strategy: ${strategy.strategyUsed} → ${strategy.outcome}`)
+      }
+    } catch (strategyError) {
+      console.error('[Memory Save] Error extracting teaching strategy:', strategyError)
+      // Non-fatal - continue with other saves
+    }
+
+    // 6. Save/update voice session if applicable
     if (sessionData) {
       try {
         // Extract topics from messages
