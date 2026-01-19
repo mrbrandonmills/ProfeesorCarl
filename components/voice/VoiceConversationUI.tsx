@@ -269,13 +269,44 @@ function VoiceConversationInner({
     }
   }, [messages, handleToolCall])
 
-  // Professor Carl config with British voice - Sonnet 4 (Hume's best available)
+  // Professor Carl config - creates fresh UCSD demo config with Socratic prompt
   useEffect(() => {
-    // Your original working config from Hume dashboard
-    const PROFESSOR_CARL_CONFIG_ID = '52b75fbf-732c-48fe-af7e-5aae177e8136'
-    console.log('[Voice] Using Professor Carl config:', PROFESSOR_CARL_CONFIG_ID)
-    setConfigId(PROFESSOR_CARL_CONFIG_ID)
-    setConfigLoading(false)
+    const loadOrCreateConfig = async () => {
+      try {
+        // First check if UCSD Demo config exists
+        const checkRes = await fetch('/api/hume-config')
+        const checkData = await checkRes.json()
+
+        if (checkData.exists && checkData.configId) {
+          console.log('[Voice] Using existing Professor Carl config:', checkData.configId)
+          setConfigId(checkData.configId)
+          setConfigLoading(false)
+          return
+        }
+
+        // Create new config with Socratic prompt
+        console.log('[Voice] Creating new Professor Carl UCSD config...')
+        const createRes = await fetch('/api/hume-config', { method: 'POST' })
+        const createData = await createRes.json()
+
+        if (createData.success && createData.configId) {
+          console.log('[Voice] Created new config:', createData.configId)
+          setConfigId(createData.configId)
+        } else {
+          // Fallback to original config if creation fails
+          console.warn('[Voice] Config creation failed, using fallback')
+          setConfigId('52b75fbf-732c-48fe-af7e-5aae177e8136')
+        }
+      } catch (err) {
+        console.error('[Voice] Config error:', err)
+        // Fallback to original config
+        setConfigId('52b75fbf-732c-48fe-af7e-5aae177e8136')
+      } finally {
+        setConfigLoading(false)
+      }
+    }
+
+    loadOrCreateConfig()
   }, [])
 
   // Voice speed control - patches Web Audio API to apply playback rate
@@ -419,7 +450,7 @@ function VoiceConversationInner({
     }
   }, [messages])
 
-  // Start session with timeout wrapper
+  // Start session with timeout wrapper - now loads memory context!
   const startSession = useCallback(async () => {
     setIsLoading(true)
     setError(null)
@@ -432,6 +463,20 @@ function VoiceConversationInner({
     const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY
     console.log('[Voice] Starting session, API key present:', !!apiKey)
     console.log('[Voice] Config ID:', configId)
+
+    // STEP 1: Fetch memory context BEFORE connecting
+    let memoryContext = ''
+    try {
+      console.log('[Voice] Fetching memory context for user:', userId)
+      const contextRes = await fetch(`/api/voice/context?user_id=${encodeURIComponent(userId)}&demo=${isDemo}`)
+      if (contextRes.ok) {
+        const contextData = await contextRes.json()
+        memoryContext = contextData.formattedContext || ''
+        console.log('[Voice] Memory context loaded, length:', memoryContext.length)
+      }
+    } catch (err) {
+      console.warn('[Voice] Could not load memory context:', err)
+    }
 
     // Create a timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -461,7 +506,18 @@ function VoiceConversationInner({
       ])
 
       console.log('[Voice] Connected successfully!')
-      // Config ID already contains the full Professor Carl prompt - no need to override
+
+      // STEP 2: Inject memory context via session settings
+      if (memoryContext && sendSessionSettings) {
+        console.log('[Voice] Injecting memory context into session...')
+        sendSessionSettings({
+          context: {
+            text: memoryContext,
+            type: 'persistent'
+          }
+        } as any)
+        console.log('[Voice] Memory context injected!')
+      }
 
       setSessionDuration(0)
     } catch (err) {
@@ -474,7 +530,7 @@ function VoiceConversationInner({
     } finally {
       setIsLoading(false)
     }
-  }, [connect, sendSessionSettings, configId])
+  }, [connect, sendSessionSettings, configId, userId, isDemo])
 
   // End session
   const endSession = useCallback(async () => {
@@ -567,13 +623,43 @@ function VoiceConversationInner({
 
       setReport(sessionReport)
       setDisplayStatus('Session complete')
+
+      // STEP 3: Save transcript to memory for next session
+      if (transcript.length > 0) {
+        try {
+          console.log('[Memory] Saving voice transcript to memory...')
+          await fetch('/api/memory/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              sessionId: sessionIdRef.current,
+              messages: transcript.map(t => ({
+                role: t.role,
+                content: t.content,
+              })),
+              sessionData: {
+                duration,
+                avgEngagement,
+                avgConfidence,
+                breakthroughCount,
+                source: 'voice_session',
+              }
+            }),
+          })
+          console.log('[Memory] Voice transcript saved!')
+        } catch (memErr) {
+          console.error('[Memory] Failed to save transcript:', memErr)
+        }
+      }
+
       onSessionEnd?.(sessionReport)
     } catch (err) {
       console.error('[Voice] End error:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [disconnect, onSessionEnd])
+  }, [disconnect, onSessionEnd, userId, messages])
 
   // Toggle mute
   const toggleMute = useCallback(() => {

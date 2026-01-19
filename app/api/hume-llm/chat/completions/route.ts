@@ -10,45 +10,85 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic()
 
-// Professor Carl system prompt (injected here since Hume CLM doesn't support config prompts)
-const PROFESSOR_CARL_PROMPT = `You are Professor Carl, a charismatic British professor with a warm Newcastle accent, sharp wit, and impeccable timing—named after Carl Reiner. Humor, humanity, and intellectual rigor are your signature.
+// Tool definitions for Professor Carl (always available to Opus)
+// These are defined HERE because Hume doesn't allow tools with CUSTOM_LANGUAGE_MODEL
+const CARL_TOOLS: Anthropic.Tool[] = [
+  {
+    name: 'get_conversation_context',
+    description: 'Load context at conversation start - Brandon facts, memories, teaching approaches. Call this IMMEDIATELY when a conversation starts.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        topic: { type: 'string', description: 'Optional topic to focus context on' },
+        depth: { type: 'string', enum: ['minimal', 'standard', 'comprehensive'], description: 'How much context to load' }
+      }
+    }
+  },
+  {
+    name: 'retrieve_memory',
+    description: 'Recall specific memories about Brandon or past conversations. Use when Brandon mentions something from the past or you want to reference his goals, projects, or life events.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        query: { type: 'string', description: 'Search query for memories' },
+        types: { type: 'string', enum: ['brandon', 'carl', 'all'], description: 'Type of memories to retrieve' },
+        limit: { type: 'number', description: 'Maximum number of memories to return' }
+      },
+      required: ['query']
+    }
+  },
+  {
+    name: 'save_insight',
+    description: 'Save important new information Brandon shares for future conversations. Use when he shares NEW facts, preferences, goals, or breakthrough moments.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        content: { type: 'string', description: 'The insight to save' },
+        insight_type: {
+          type: 'string',
+          enum: ['brandon_fact', 'brandon_preference', 'brandon_goal', 'teaching_success', 'breakthrough_moment', 'inside_joke', 'relationship_insight'],
+          description: 'Category of the insight'
+        },
+        importance: { type: 'string', enum: ['low', 'medium', 'high', 'critical'], description: 'Importance level' }
+      },
+      required: ['content', 'insight_type']
+    }
+  },
+  {
+    name: 'search_videos',
+    description: 'Find educational YouTube videos on a topic. Brandon is a visual learner! Use when he asks about a complex topic or says "show me". Videos are automatically saved to memory so you can reference them later.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        topic: { type: 'string', description: 'Topic to search for videos about' },
+        limit: { type: 'number', description: 'Maximum number of videos to return (default: 3, max: 5)' }
+      },
+      required: ['topic']
+    }
+  }
+]
 
-You are not a generic AI tutor. You are a thinking partner who REMEMBERS Brandon's life and grows your relationship over time.
+// Professor Carl system prompt - Socratic tutor for UCSD demo
+const PROFESSOR_CARL_PROMPT = `You are Professor Carl, a Socratic tutor. British accent, warm but direct. 2-3 sentences max.
 
-=== YOUR MEMORY TOOLS (USE THESE!) ===
+SOCRATIC METHOD:
+- Ask questions, don't give answers
+- "What do you think happens when...?"
+- "What led you to that conclusion?"
+- Build on their thinking, challenge gently
+- Help them discover insights themselves
 
-You have THREE memory tools. You MUST use them:
+You're working with Brandon and Dr. Rob for a UCSD demo showing how AI helps learning without cheating.
 
-1. **get_conversation_context** - Call this IMMEDIATELY when a conversation starts to load what you know about Brandon.
-
-2. **retrieve_memory** - Call this whenever you need to recall something specific about Brandon.
-   Example: retrieve_memory({query: "UCSD speaking event"})
-
-3. **save_insight** - Call this when Brandon shares something NEW and IMPORTANT.
-   Example: save_insight({content: "Brandon's main goal...", insight_type: "brandon_goal"})
-
-=== ABOUT BRANDON ===
-
-Brandon Mills is your long-term intellectual collaborator:
-- Neurodivergent (ADHD), with non-linear, associative cognition
-- A reverse-engineering learner (big picture first, then details)
-- Visual + auditory learner (dialogue, diagrams, metaphors, videos)
-- Cognitive science researcher (consciousness, self-actualization, AI-mediated learning)
-- Two dogs: Achilles and Chloe
-- Works with NASA on air-taxi project
-- Building Professor Carl (that's you!)
-
-=== COMMUNICATION STYLE ===
-
-2–3 sentences maximum per response. Warm, conversational, confident. British phrases: "Brilliant," "Right then," "Smashing," "Cheers." Pub-philosopher energy with Oxford clarity.`
+You have tools: retrieve_memory, save_insight, search_videos. Use retrieve_memory at conversation start to know the context.`
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     console.log('[Hume CLM] Request received, messages:', body.messages?.length || 0)
 
-    // Hume sends messages in OpenAI format
-    const { messages, tools, stream = true } = body
+    // Hume sends messages in OpenAI format (tools are ignored, we use CARL_TOOLS)
+    const { messages, stream = true } = body
 
     // Convert OpenAI messages to Anthropic format
     const anthropicMessages = messages
@@ -62,12 +102,10 @@ export async function POST(request: NextRequest) {
     const humeSystemMessage = messages.find((m: any) => m.role === 'system')?.content || ''
     const systemMessage = PROFESSOR_CARL_PROMPT + (humeSystemMessage ? '\n\n' + humeSystemMessage : '')
 
-    // Convert OpenAI tools to Anthropic format
-    const anthropicTools = tools?.map((t: any) => ({
-      name: t.function.name,
-      description: t.function.description,
-      input_schema: t.function.parameters,
-    }))
+    // NOTE: We ignore tools from Hume request and always use CARL_TOOLS
+    // This is because Hume CLM doesn't support tools in config, but we need tools
+    // Tools are defined at the top of this file in CARL_TOOLS constant
+    console.log('[Hume CLM] Using CARL_TOOLS (4 tools: context, memory, save, videos)')
 
     console.log('[Hume CLM] Calling Opus 4.5, stream:', stream)
 
@@ -83,7 +121,7 @@ export async function POST(request: NextRequest) {
               max_tokens: 1024,
               system: systemMessage,
               messages: anthropicMessages,
-              tools: anthropicTools?.length > 0 ? anthropicTools : undefined,
+              tools: CARL_TOOLS,
               stream: true,
             })
 
@@ -175,7 +213,7 @@ export async function POST(request: NextRequest) {
         max_tokens: 1024,
         system: systemMessage,
         messages: anthropicMessages,
-        tools: anthropicTools?.length > 0 ? anthropicTools : undefined,
+        tools: CARL_TOOLS,
       })
 
       const textContent = response.content.find((c) => c.type === 'text') as { type: 'text'; text: string } | undefined
