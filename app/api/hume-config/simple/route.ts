@@ -31,7 +31,7 @@ export async function POST() {
         evi_version: '3',
         voice: {
           provider: 'HUME_AI',
-          name: 'ITO', // British male voice
+          name: 'Male English Actor', // British male voice
         },
         language_model: {
           model_provider: 'CUSTOM_LANGUAGE_MODEL',
