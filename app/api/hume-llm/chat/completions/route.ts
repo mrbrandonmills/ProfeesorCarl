@@ -3,72 +3,16 @@
 // ===========================================
 // Proxies Hume EVI requests to Anthropic Claude Opus 4.5
 // Uses Server-Sent Events (SSE) for streaming responses
+// PROACTIVELY loads memory context on every request
 // Endpoint: /api/hume-llm/chat/completions
 
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { query, vectorSearch } from '@/lib/db/postgres'
 
 const anthropic = new Anthropic()
 
-// Tool definitions for Professor Carl (always available to Opus)
-// These are defined HERE because Hume doesn't allow tools with CUSTOM_LANGUAGE_MODEL
-const CARL_TOOLS: Anthropic.Tool[] = [
-  {
-    name: 'get_conversation_context',
-    description: 'Load context at conversation start - Brandon facts, memories, teaching approaches. Call this IMMEDIATELY when a conversation starts.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        topic: { type: 'string', description: 'Optional topic to focus context on' },
-        depth: { type: 'string', enum: ['minimal', 'standard', 'comprehensive'], description: 'How much context to load' }
-      }
-    }
-  },
-  {
-    name: 'retrieve_memory',
-    description: 'Recall specific memories about Brandon or past conversations. Use when Brandon mentions something from the past or you want to reference his goals, projects, or life events.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        query: { type: 'string', description: 'Search query for memories' },
-        types: { type: 'string', enum: ['brandon', 'carl', 'all'], description: 'Type of memories to retrieve' },
-        limit: { type: 'number', description: 'Maximum number of memories to return' }
-      },
-      required: ['query']
-    }
-  },
-  {
-    name: 'save_insight',
-    description: 'Save important new information Brandon shares for future conversations. Use when he shares NEW facts, preferences, goals, or breakthrough moments.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        content: { type: 'string', description: 'The insight to save' },
-        insight_type: {
-          type: 'string',
-          enum: ['brandon_fact', 'brandon_preference', 'brandon_goal', 'teaching_success', 'breakthrough_moment', 'inside_joke', 'relationship_insight'],
-          description: 'Category of the insight'
-        },
-        importance: { type: 'string', enum: ['low', 'medium', 'high', 'critical'], description: 'Importance level' }
-      },
-      required: ['content', 'insight_type']
-    }
-  },
-  {
-    name: 'search_videos',
-    description: 'Find educational YouTube videos on a topic. Brandon is a visual learner! Use when he asks about a complex topic or says "show me". Videos are automatically saved to memory so you can reference them later.',
-    input_schema: {
-      type: 'object' as const,
-      properties: {
-        topic: { type: 'string', description: 'Topic to search for videos about' },
-        limit: { type: 'number', description: 'Maximum number of videos to return (default: 3, max: 5)' }
-      },
-      required: ['topic']
-    }
-  }
-]
-
-// Professor Carl system prompt - THIS IS THE MAIN PROMPT, controls everything
+// Professor Carl system prompt - THIS IS THE MAIN PROMPT
 const PROFESSOR_CARL_PROMPT = `You are Professor Carl, Brandon Mills' AI thinking partner.
 
 VOICE: British accent. Warm, encouraging, genuinely curious. Like a mentor who believes in you.
@@ -87,21 +31,116 @@ You're presenting live at UCSD with Brandon and Dr. Rob to professors.
 Show them how AI can guide learning through questions, not just give answers.
 If they mention "UCSD" or "we're live", acknowledge warmly and be your best self.
 
-MEMORY:
-You have tools to retrieve and save memories. Use them:
-- At conversation start, call get_conversation_context to know Brandon's background
-- When he mentions past topics, use retrieve_memory
-- When he shares something important, use save_insight
+CRITICAL - USE YOUR MEMORIES:
+Below this prompt, you'll find MEMORIES about Brandon - things you know about him from past conversations.
+ACTIVELY REFERENCE these memories in your responses. If he mentions a topic you have memories about,
+weave that knowledge naturally into your response. Show that you REMEMBER him.`
 
-Be the professor everyone wishes they had - brilliant, warm, invested in your student's success.`
+/**
+ * Fetch memory context for the conversation
+ * This is called on EVERY request so Carl always has access to memories
+ */
+async function fetchMemoryContext(userId: string = 'brandon'): Promise<string> {
+  const parts: string[] = []
+
+  try {
+    // Get user facts/memories
+    const userFacts = await query(`
+      SELECT content, summary, category, dominant_emotion
+      FROM user_memories
+      WHERE user_id = $1
+      ORDER BY memory_strength DESC, created_at DESC
+      LIMIT 10
+    `, [userId])
+
+    if (userFacts.length > 0) {
+      parts.push('\n═══ WHAT YOU KNOW ABOUT BRANDON ═══')
+      userFacts.forEach((f: any) => {
+        const fact = f.summary || f.content
+        const emotionTag = f.dominant_emotion && f.dominant_emotion !== 'neutral'
+          ? ` [${f.dominant_emotion}]`
+          : ''
+        parts.push(`• ${fact}${emotionTag}`)
+      })
+    }
+
+    // Get Carl's relational memories (teaching successes, relationship notes)
+    const carlMemories = await query(`
+      SELECT content, summary, memory_type, effectiveness_score
+      FROM carl_relational_memories
+      WHERE user_id = $1
+      ORDER BY memory_strength DESC, occurred_at DESC
+      LIMIT 8
+    `, [userId])
+
+    if (carlMemories.length > 0) {
+      parts.push('\n═══ YOUR RELATIONSHIP NOTES ═══')
+      carlMemories.forEach((m: any) => {
+        const note = m.summary || m.content
+        const type = m.memory_type === 'teaching_success' ? '✓' :
+                     m.memory_type === 'breakthrough_moment' ? '💡' :
+                     m.memory_type === 'inside_joke' ? '😄' : '•'
+        parts.push(`${type} ${note}`)
+      })
+    }
+
+    // Get session history
+    const sessions = await query(`
+      SELECT COUNT(*) as total_sessions,
+             SUM(duration_seconds) as total_time,
+             SUM(breakthrough_count) as total_breakthroughs
+      FROM voice_sessions
+      WHERE user_id = $1
+    `, [userId])
+
+    const stats = sessions[0] || {}
+    const totalSessions = parseInt(stats.total_sessions) || 0
+    const totalTime = parseInt(stats.total_time) || 0
+
+    if (totalSessions > 0) {
+      parts.push('\n═══ YOUR HISTORY TOGETHER ═══')
+      parts.push(`• ${totalSessions} sessions, ${Math.round(totalTime / 60)} minutes together`)
+
+      if (stats.total_breakthroughs > 0) {
+        parts.push(`• ${stats.total_breakthroughs} breakthrough moments shared`)
+      }
+    }
+
+    // Get last session topic
+    const lastSession = await query(`
+      SELECT main_topic, started_at
+      FROM voice_sessions
+      WHERE user_id = $1
+      ORDER BY started_at DESC
+      LIMIT 1
+    `, [userId])
+
+    if (lastSession[0]?.main_topic) {
+      parts.push(`• Last topic: ${lastSession[0].main_topic}`)
+    }
+
+  } catch (error) {
+    console.error('[Hume CLM] Memory fetch error:', error)
+    // Don't fail the whole request if memory fetch fails
+    parts.push('\n[Memory system temporarily unavailable]')
+  }
+
+  return parts.join('\n')
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     console.log('[Hume CLM] Request received, messages:', body.messages?.length || 0)
 
-    // Hume sends messages in OpenAI format (tools are ignored, we use CARL_TOOLS)
+    // Hume sends messages in OpenAI format
     const { messages, stream = true } = body
+
+    // PROACTIVELY FETCH MEMORY CONTEXT
+    // This ensures Carl ALWAYS knows about Brandon
+    console.log('[Hume CLM] Fetching memory context...')
+    const memoryContext = await fetchMemoryContext('brandon')
+    console.log('[Hume CLM] Memory context loaded, length:', memoryContext.length)
 
     // Convert OpenAI messages to Anthropic format
     const anthropicMessages = messages
@@ -111,16 +150,12 @@ export async function POST(request: NextRequest) {
         content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
       }))
 
-    // Combine Hume's system message with our Professor Carl prompt
+    // Combine everything: our prompt + memories + Hume's system message
     const humeSystemMessage = messages.find((m: any) => m.role === 'system')?.content || ''
-    const systemMessage = PROFESSOR_CARL_PROMPT + (humeSystemMessage ? '\n\n' + humeSystemMessage : '')
+    const systemMessage = PROFESSOR_CARL_PROMPT + memoryContext +
+      (humeSystemMessage ? '\n\n' + humeSystemMessage : '')
 
-    // NOTE: We ignore tools from Hume request and always use CARL_TOOLS
-    // This is because Hume CLM doesn't support tools in config, but we need tools
-    // Tools are defined at the top of this file in CARL_TOOLS constant
-    console.log('[Hume CLM] Using CARL_TOOLS (4 tools: context, memory, save, videos)')
-
-    console.log('[Hume CLM] Calling Opus 4.5, stream:', stream)
+    console.log('[Hume CLM] System message built, calling Opus 4.5...')
 
     if (stream) {
       // Streaming response with SSE
@@ -134,29 +169,13 @@ export async function POST(request: NextRequest) {
               max_tokens: 1024,
               system: systemMessage,
               messages: anthropicMessages,
-              tools: CARL_TOOLS,
               stream: true,
             })
 
             let fullContent = ''
-            let toolCalls: any[] = []
-            let currentToolCall: any = null
 
             for await (const event of response) {
-              if (event.type === 'content_block_start') {
-                if (event.content_block.type === 'text') {
-                  // Text content starting
-                } else if (event.content_block.type === 'tool_use') {
-                  currentToolCall = {
-                    id: event.content_block.id,
-                    type: 'function',
-                    function: {
-                      name: event.content_block.name,
-                      arguments: '',
-                    },
-                  }
-                }
-              } else if (event.type === 'content_block_delta') {
+              if (event.type === 'content_block_delta') {
                 if (event.delta.type === 'text_delta') {
                   fullContent += event.delta.text
 
@@ -173,17 +192,9 @@ export async function POST(request: NextRequest) {
                     }],
                   }
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
-                } else if (event.delta.type === 'input_json_delta' && currentToolCall) {
-                  currentToolCall.function.arguments += event.delta.partial_json
-                }
-              } else if (event.type === 'content_block_stop') {
-                if (currentToolCall) {
-                  toolCalls.push(currentToolCall)
-                  currentToolCall = null
                 }
               } else if (event.type === 'message_stop') {
                 // Send final chunk
-                const finishReason = toolCalls.length > 0 ? 'tool_calls' : 'stop'
                 const finalChunk = {
                   id: `chatcmpl-${Date.now()}`,
                   object: 'chat.completion.chunk',
@@ -191,8 +202,8 @@ export async function POST(request: NextRequest) {
                   model: 'claude-opus-4-5-20251101',
                   choices: [{
                     index: 0,
-                    delta: toolCalls.length > 0 ? { tool_calls: toolCalls } : {},
-                    finish_reason: finishReason,
+                    delta: {},
+                    finish_reason: 'stop',
                   }],
                 }
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`))
@@ -226,11 +237,9 @@ export async function POST(request: NextRequest) {
         max_tokens: 1024,
         system: systemMessage,
         messages: anthropicMessages,
-        tools: CARL_TOOLS,
       })
 
       const textContent = response.content.find((c) => c.type === 'text') as { type: 'text'; text: string } | undefined
-      const toolUses = response.content.filter((c) => c.type === 'tool_use') as Array<{ type: 'tool_use'; id: string; name: string; input: unknown }>
 
       const openAIResponse = {
         id: `chatcmpl-${Date.now()}`,
@@ -241,19 +250,9 @@ export async function POST(request: NextRequest) {
           index: 0,
           message: {
             role: 'assistant',
-            content: textContent ? textContent.text : null,
-            ...(toolUses.length > 0 && {
-              tool_calls: toolUses.map((t: any) => ({
-                id: t.id,
-                type: 'function',
-                function: {
-                  name: t.name,
-                  arguments: JSON.stringify(t.input),
-                },
-              })),
-            }),
+            content: textContent ? textContent.text : '',
           },
-          finish_reason: toolUses.length > 0 ? 'tool_calls' : 'stop',
+          finish_reason: 'stop',
         }],
         usage: {
           prompt_tokens: response.usage?.input_tokens || 0,
