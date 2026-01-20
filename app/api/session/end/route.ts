@@ -4,7 +4,7 @@
 // Save session reports and emotional analytics to database
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import { query } from '@/lib/db/postgres'
 
 interface SessionReport {
   duration?: number
@@ -58,16 +58,44 @@ export async function POST(request: NextRequest) {
 
     console.log('[Session End] Saving session:', sessionId, 'for user:', userId)
 
-    // Try to save to voice_sessions table (from memory-schema.sql)
-    const { data, error } = await supabaseAdmin
-      .from('voice_sessions')
-      .upsert(sessionData, { onConflict: 'id' })
-      .select()
-      .single()
+    // Try to save to voice_sessions table using PostgreSQL
+    try {
+      await query(`
+        INSERT INTO voice_sessions (
+          id, user_id, duration_seconds, average_engagement, average_confidence,
+          breakthrough_count, confusion_moments, topics_explored, main_topic,
+          overall_quality_score, session_report, ended_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ON CONFLICT (id) DO UPDATE SET
+          duration_seconds = EXCLUDED.duration_seconds,
+          average_engagement = EXCLUDED.average_engagement,
+          average_confidence = EXCLUDED.average_confidence,
+          breakthrough_count = EXCLUDED.breakthrough_count,
+          confusion_moments = EXCLUDED.confusion_moments,
+          topics_explored = EXCLUDED.topics_explored,
+          main_topic = EXCLUDED.main_topic,
+          overall_quality_score = EXCLUDED.overall_quality_score,
+          session_report = EXCLUDED.session_report,
+          ended_at = EXCLUDED.ended_at
+      `, [
+        sessionData.id,
+        sessionData.user_id,
+        sessionData.duration_seconds,
+        sessionData.average_engagement,
+        sessionData.average_confidence,
+        sessionData.breakthrough_count,
+        sessionData.confusion_moments,
+        sessionData.topics_explored,
+        sessionData.main_topic,
+        sessionData.overall_quality_score,
+        JSON.stringify(sessionData.session_report),
+        sessionData.ended_at
+      ])
 
-    if (error) {
+      console.log('[Session End] Session saved successfully:', sessionId)
+    } catch (dbError) {
       // If table doesn't exist, log but don't fail
-      console.error('[Session End] Database error:', error.message)
+      console.error('[Session End] Database error:', dbError)
 
       // Still return success for demo purposes - the session data was logged
       return NextResponse.json({
@@ -83,12 +111,10 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log('[Session End] Session saved successfully:', data?.id || sessionId)
-
     return NextResponse.json({
       success: true,
       saved: true,
-      sessionId: data?.id || sessionId,
+      sessionId,
       reportSummary: {
         duration: sessionData.duration_seconds,
         engagement: sessionData.overall_quality_score,
@@ -122,27 +148,27 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data: sessions, error } = await supabaseAdmin
-      .from('voice_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('started_at', { ascending: false })
-      .limit(limit)
+    try {
+      const sessions = await query(`
+        SELECT * FROM voice_sessions
+        WHERE user_id = $1
+        ORDER BY started_at DESC
+        LIMIT $2
+      `, [userId, limit])
 
-    if (error) {
-      console.error('[Session End] Fetch error:', error.message)
+      return NextResponse.json({
+        success: true,
+        sessions: sessions || [],
+        count: sessions?.length || 0
+      })
+    } catch (dbError) {
+      console.error('[Session End] Fetch error:', dbError)
       return NextResponse.json({
         success: true,
         sessions: [],
         reason: 'No sessions found or table does not exist'
       })
     }
-
-    return NextResponse.json({
-      success: true,
-      sessions: sessions || [],
-      count: sessions?.length || 0
-    })
 
   } catch (error) {
     console.error('[Session End] Error:', error)
