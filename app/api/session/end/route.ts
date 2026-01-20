@@ -35,26 +35,33 @@ export async function POST(request: NextRequest) {
 
     const sessionReport = report as SessionReport
 
-    // Prepare session data for storage
+    // Prepare session data for voice_sessions table (memory-schema.sql)
     const sessionData = {
-      session_id: sessionId,
+      id: sessionId,
       user_id: userId,
-      duration: sessionReport.duration || 0,
-      message_count: sessionReport.messageCount || 0,
-      overall_engagement: sessionReport.overallEngagement || 0,
-      emotion_data: sessionReport.emotionSummary || {},
+      duration_seconds: sessionReport.duration || 0,
+      average_engagement: sessionReport.emotionSummary?.averageEngagement || sessionReport.overallEngagement || 0,
+      average_confidence: sessionReport.emotionSummary?.averageConfidence || 0,
+      breakthrough_count: sessionReport.emotionSummary?.peakMoments?.length || 0,
+      confusion_moments: Math.round((sessionReport.emotionSummary?.averageConfusion || 0) * 10),
       topics_explored: sessionReport.topicsDiscussed || [],
-      insights_gained: sessionReport.keyInsights?.length || 0,
-      is_demo: isDemo || false,
-      created_at: timestamp || new Date().toISOString(),
+      main_topic: sessionReport.topicsDiscussed?.[0] || null,
+      overall_quality_score: sessionReport.overallEngagement || 0,
+      session_report: {
+        messageCount: sessionReport.messageCount,
+        emotionSummary: sessionReport.emotionSummary,
+        keyInsights: sessionReport.keyInsights,
+        isDemo: isDemo,
+      },
+      ended_at: timestamp || new Date().toISOString(),
     }
 
     console.log('[Session End] Saving session:', sessionId, 'for user:', userId)
 
-    // Try to save to Supabase
+    // Try to save to voice_sessions table (from memory-schema.sql)
     const { data, error } = await supabaseAdmin
-      .from('session_summaries')
-      .insert(sessionData)
+      .from('voice_sessions')
+      .upsert(sessionData, { onConflict: 'id' })
       .select()
       .single()
 
@@ -69,8 +76,8 @@ export async function POST(request: NextRequest) {
         reason: 'Database table may not exist yet',
         sessionId,
         reportSummary: {
-          duration: sessionData.duration,
-          engagement: sessionData.overall_engagement,
+          duration: sessionData.duration_seconds,
+          engagement: sessionData.overall_quality_score,
           topicsCount: sessionData.topics_explored.length,
         }
       })
@@ -83,8 +90,8 @@ export async function POST(request: NextRequest) {
       saved: true,
       sessionId: data?.id || sessionId,
       reportSummary: {
-        duration: sessionData.duration,
-        engagement: sessionData.overall_engagement,
+        duration: sessionData.duration_seconds,
+        engagement: sessionData.overall_quality_score,
         topicsCount: sessionData.topics_explored.length,
       }
     })
@@ -116,10 +123,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: sessions, error } = await supabaseAdmin
-      .from('session_summaries')
+      .from('voice_sessions')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('started_at', { ascending: false })
       .limit(limit)
 
     if (error) {
