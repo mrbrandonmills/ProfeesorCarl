@@ -443,8 +443,8 @@ function VoiceConversationInner({
     setError(null)
     emotionHistoryRef.current = []
     startTimeRef.current = Date.now()
-    // Generate session ID for memory tracking
-    sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // Generate session ID as proper UUID for database compatibility
+    sessionIdRef.current = crypto.randomUUID()
     console.log('[Memory] Session ID:', sessionIdRef.current)
 
     const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY

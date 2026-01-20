@@ -31,7 +31,7 @@ export async function POST() {
         evi_version: '3',
         voice: {
           provider: 'HUME_AI',
-          name: 'Male English Actor', // British male voice
+          id: '9e068547-5ba4-4c8e-8e03-69282a008f04', // Male English Actor - British RP
         },
         language_model: {
           model_provider: 'CUSTOM_LANGUAGE_MODEL',
